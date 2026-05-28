@@ -561,3 +561,104 @@ Create a system that becomes:
 * unit testing for ideas
 * static analysis for human decisions
 * a cognitive debugging platform that helps people find and fix the flaws in their thinking before reality does.
+
+---
+
+# 16. V1 Outcomes and Non-Goals
+
+## Outcomes
+
+* end-to-end run from idea to reconstruction with critiques, edge cases, and scores
+* interactive dashboard with assumption graph, dependency tree, risk heatmap, and confidence radar
+* shareable report with top risks and rebuilt idea
+* saved project history for returning users
+
+## Non-Goals
+
+* general-purpose chatbot or assistant
+* market research or live web validation
+* team collaboration or real-time co-editing
+* automated decisions or guarantees of success
+* industry-specific compliance certification
+
+---
+
+# 17. Success Metrics and Quality Bars
+
+## Product Targets (90-day post-launch)
+
+* average session duration >= 6 minutes
+* ideas analyzed per active user per week >= 2.0
+* rebuild acceptance rate >= 40%
+* 4-week returning users >= 25%
+
+## AI Quality Targets
+
+* critique relevance mean >= 4.2/5 on weekly human evaluation
+* hallucination rate <= 5% of reviewed critiques
+* assumption extraction accuracy >= 85% vs a human baseline set
+* edge-case diversity >= 4 distinct categories per run
+
+## Quality Bars (gating)
+
+* critique relevance: >= 4/5 on at least 80% of samples
+* hallucination rate: <= 3% for high-severity critiques
+
+---
+
+# 18. Performance and Cost Budgets
+
+* time to first insight (p95) <= 8s
+* full pipeline completion (p95) <= 60s
+* average run cost <= $0.35, p95 run cost <= $0.70
+* max tokens per run <= 20k
+* concurrency target: 50 parallel runs with a degraded mode after
+
+---
+
+# 19. Data Retention and Privacy
+
+## Retention
+
+* raw inputs and outputs: 30 days by default
+* project summaries and scores: 12 months
+* anonymized metrics: 24 months
+* backups: rolling 30 days
+
+## Deletion
+
+* user-initiated deletion completes within 7 days
+* backups expire and purge on the next rotation window
+
+## Privacy and Legal Constraints
+
+* no training on user data by default
+* comply with GDPR and CCPA requests
+* store only necessary PII (email and account id)
+* prohibit sensitive data in inputs and show warnings
+* age gate: 16+
+
+---
+
+# 20. Risk Register and Mitigation Owners
+
+| risk | impact | mitigation | owner |
+| --- | --- | --- | --- |
+| repetitive or low-variance outputs | low trust | prompt diversity, evals, regression tests | ai lead |
+| hallucinated assumptions | misleading decisions | validation, severity gating, audit samples | ai lead |
+| high inference costs | margin erosion | caching, routing, budget guards | eng lead |
+| latency spikes | drop-off | queueing, timeouts, partial streaming | platform | 
+| critique fatigue | churn | summarize top issues, ux pacing | product |
+
+---
+
+# 21. Prod Readiness Criteria
+
+* success metrics and quality bars met for 3 consecutive weeks
+* p95 latency within budget at target load
+* security review has no critical or high findings open
+* backup and restore tested end-to-end
+* on-call, alerts, and runbooks in place
+* incident response drill completed
+* privacy policy, terms, and DPA ready
+* staged rollout and rollback verified

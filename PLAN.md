@@ -5,14 +5,14 @@ all steps are checkboxes and should be marked as they are completed.
 ## phase 0: alignment and scope
 - [x] re-read the prd and confirm the goal, tagline, and target users
 - [x] write product principles that enforce "not a chatbot"
-- [ ] define v1 outcomes and explicit non-goals
-- [ ] set measurable success metrics and target thresholds
-- [ ] define quality bars for critique relevance and hallucination rate
-- [ ] define latency and cost budgets per run
-- [ ] define data retention and deletion policy
-- [ ] define privacy and legal constraints
-- [ ] define a risk register and mitigation owners
-- [ ] define acceptance criteria for prod readiness
+- [x] define v1 outcomes and explicit non-goals
+- [x] set measurable success metrics and target thresholds
+- [x] define quality bars for critique relevance and hallucination rate
+- [x] define latency and cost budgets per run
+- [x] define data retention and deletion policy
+- [x] define privacy and legal constraints
+- [x] define a risk register and mitigation owners
+- [x] define acceptance criteria for prod readiness
 
 ## phase 1: repo and dev environment
 - [ ] initialize repo and folder layout for frontend, backend, and shared assets
