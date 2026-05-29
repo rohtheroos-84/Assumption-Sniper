@@ -15,17 +15,17 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] define acceptance criteria for prod readiness
 
 ## phase 1: repo and dev environment
-- [ ] initialize repo and folder layout for frontend, backend, and shared assets
-- [ ] set node and python version targets
-- [ ] choose package managers and lockfiles
-- [ ] configure formatting and linting for js/ts and python
-- [ ] configure type checking for frontend
-- [ ] add pre-commit hooks
-- [ ] define standard scripts for dev, test, lint, format, and build
-- [ ] create env variable schema and sample values
-- [ ] write local dev setup instructions
-- [ ] add basic ci pipeline for lint, test, and build
-- [ ] add contribution guidelines and code ownership rules
+- [x] initialize repo and folder layout for frontend, backend, and shared assets
+- [x] set node and python version targets
+- [x] choose package managers and lockfiles
+- [x] configure formatting and linting for js/ts and python
+- [x] configure type checking for frontend
+- [x] add pre-commit hooks
+- [x] define standard scripts for dev, test, lint, format, and build
+- [x] create env variable schema and sample values
+- [x] write local dev setup instructions
+- [x] add basic ci pipeline for lint, test, and build
+- [x] add contribution guidelines and code ownership rules
 
 ## phase 2: architecture and data design
 - [ ] finalize request and response shapes for each pipeline stage
