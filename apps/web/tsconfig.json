@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["dom", "dom.iterable", "es2022"],
+    "allowJs": false,
+    "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true
+  },
+  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts"],
+  "exclude": ["node_modules", ".next", "dist"]
+}

@@ -1,0 +1,14 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "B", "UP"]
+ignore = []
+extend-exclude = ["migrations"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
