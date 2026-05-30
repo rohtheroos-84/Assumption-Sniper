@@ -28,17 +28,17 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] add contribution guidelines and code ownership rules
 
 ## phase 2: architecture and data design
-- [ ] finalize request and response shapes for each pipeline stage
-- [ ] define entities for projects, assumptions, critiques, and simulations
-- [ ] define scoring model inputs and formulas
-- [ ] define job lifecycle states and transitions
-- [ ] design streaming protocol for incremental results
-- [ ] design caching strategy and cache keys
-- [ ] design rate limits and quota rules
-- [ ] choose background job system and queue names
-- [ ] design audit logging data
-- [ ] design feature flags for model routing
-- [ ] create threat model and trust boundaries
+- [x] finalize request and response shapes for each pipeline stage
+- [x] define entities for projects, assumptions, critiques, and simulations
+- [x] define scoring model inputs and formulas
+- [x] define job lifecycle states and transitions
+- [x] design streaming protocol for incremental results
+- [x] design caching strategy and cache keys
+- [x] design rate limits and quota rules
+- [x] choose background job system and queue names
+- [x] design audit logging data
+- [x] design feature flags for model routing
+- [x] create threat model and trust boundaries
 
 ## phase 3: backend foundation
 - [ ] scaffold fastapi app and routing structure
