@@ -41,9 +41,9 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] create threat model and trust boundaries
 
 ## phase 3: backend foundation
-- [ ] scaffold fastapi app and routing structure
-- [ ] add config management with environment validation
-- [ ] add structured logging and request ids
+- [x] scaffold fastapi app and routing structure
+- [x] add config management with environment validation
+- [x] add structured logging and request ids
 - [ ] add health and readiness endpoints
 - [ ] add database connection pooling
 - [ ] set up migrations and baseline schema
