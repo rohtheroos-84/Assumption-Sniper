@@ -17,6 +17,14 @@
 3. pip install -r apps/api/requirements.txt -r apps/api/requirements-dev.txt
 4. python -m uvicorn app.main:app --reload --app-dir apps/api
 
+## initialize database
+
+run the baseline schema creation script once after postgres is running:
+
+```
+python -m apps.api.scripts.init_db
+```
+
 ## common scripts
 - lint web: pnpm -C apps/web lint
 - typecheck web: pnpm -C apps/web typecheck
