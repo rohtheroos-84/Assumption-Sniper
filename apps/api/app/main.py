@@ -4,16 +4,23 @@ import logging
 import uuid
 
 from fastapi import FastAPI, Request
+from starlette.middleware import Middleware
 
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, request_id_var
+from app.core.middleware import RequestSizeLimitMiddleware, RateLimitMiddleware
 
 settings = get_settings()
 configure_logging(settings)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Assumption Sniper API", version="0.1.0")
+middleware = [
+    Middleware(RequestSizeLimitMiddleware, max_body_size=settings.max_request_size_bytes),
+    Middleware(RateLimitMiddleware),
+]
+
+app = FastAPI(title="Assumption Sniper API", version="0.1.0", middleware=middleware)
 
 
 @app.middleware("http")
