@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     openrouter_max_retries: int = Field(2, ge=0, le=5)
     log_level: str = "INFO"
     log_json: bool = False
+    # request limits
+    max_request_size_bytes: int = Field(65536, ge=1024)  # 64KB default
+    run_creation_per_hour: int = Field(10, ge=1)
+    read_requests_per_minute: int = Field(60, ge=1)
+    ip_requests_per_minute: int = Field(120, ge=1)
 
     model_config = SettingsConfigDict(
         env_file=".env",
