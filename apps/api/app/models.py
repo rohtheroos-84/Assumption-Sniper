@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     func,
@@ -52,7 +53,7 @@ class Run(Base):
     started_at = Column(DateTime(timezone=True), nullable=True)
     finished_at = Column(DateTime(timezone=True), nullable=True)
     model_profile = Column(String, nullable=True)
-    cost_usd = Column(Integer, nullable=True)
+    cost_usd = Column(Numeric(10, 4), nullable=True)
     token_total = Column(Integer, nullable=True)
 
     project = relationship("Project")
