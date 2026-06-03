@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     openrouter_base_url: HttpUrl = "https://openrouter.ai/api/v1"
     openrouter_timeout_seconds: int = Field(60, ge=1, le=300)
     openrouter_max_retries: int = Field(2, ge=0, le=5)
+    openrouter_primary_model: str = "openai/gpt-4o-mini"
+    openrouter_reasoning_model: str = "anthropic/claude-3.5-sonnet"
+    openrouter_fallback_model: str = "openai/gpt-4.1-mini"
+    openrouter_fast_model: str = "openai/gpt-4o-mini"
+    openrouter_max_tokens: int = Field(1200, ge=32, le=8192)
     log_level: str = "INFO"
     log_json: bool = False
     # request limits

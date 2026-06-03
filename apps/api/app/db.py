@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from typing import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import get_settings
@@ -28,7 +29,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 async def check_db() -> bool:
     try:
         async with engine.begin() as conn:
-            await conn.execute("SELECT 1")
+            await conn.execute(text("SELECT 1"))
         return True
     except Exception:
         return False

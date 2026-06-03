@@ -52,16 +52,16 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] implement rate limiting middleware
 
 ## phase 4: ai layer foundation
-- [ ] implement openrouter client with timeouts and retries
-- [ ] define prompt templates for each model role
-- [ ] define input and output schemas for model responses
-- [ ] implement response validation and repair
-- [ ] add safety filters for unsafe content
-- [ ] add deterministic settings per task type
-- [ ] add model selection and fallback routing
-- [ ] add token usage tracking and cost accounting
-- [ ] add caching for identical requests
-- [ ] add prompt versioning and experiment ids
+- [x] implement openrouter client with timeouts and retries
+- [x] define prompt templates for each model role
+- [x] define input and output schemas for model responses
+- [x] implement response validation and repair
+- [x] add safety filters for unsafe content
+- [x] add deterministic settings per task type
+- [x] add model selection and fallback routing
+- [x] add token usage tracking and cost accounting
+- [x] add caching for identical requests
+- [x] add prompt versioning and experiment ids
 
 ## phase 5a: input analysis
 - [ ] implement idea decomposition service
