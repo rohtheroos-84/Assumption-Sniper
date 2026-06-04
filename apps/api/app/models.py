@@ -112,6 +112,16 @@ class Reconstruction(Base):
     risk_reductions_json = Column(JSON, nullable=True)
 
 
+class Decomposition(Base):
+    __tablename__ = "decompositions"
+
+    id = Column(String, primary_key=True, default=gen_uuid)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=False)
+    run_id = Column(String, ForeignKey("runs.id"), nullable=True)
+    output_json = Column(JSON, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class Score(Base):
     __tablename__ = "scores"
 
