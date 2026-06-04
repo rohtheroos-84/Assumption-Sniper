@@ -64,16 +64,16 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] add prompt versioning and experiment ids
 
 ## phase 5a: input analysis
-- [ ] implement idea decomposition service
-- [ ] store decomposition results
-- [ ] expose api endpoint for decomposition
+- [X] implement idea decomposition service
+- [X] store decomposition results
+- [X] expose api endpoint for decomposition
 
 ## phase 5b: assumption extraction
-- [ ] implement recursive assumption extraction
-- [ ] implement assumption chaining with parent links
+- [x] implement recursive assumption extraction
+- [x] implement assumption chaining with parent links
 - [ ] implement assumption category classifier
-- [ ] persist assumptions and relationships
-- [ ] expose api endpoint for assumption extraction
+- [x] persist assumptions and relationships
+- [x] expose api endpoint for assumption extraction
 
 ## phase 5c: skeptic mode
 - [ ] implement critique generator per assumption
