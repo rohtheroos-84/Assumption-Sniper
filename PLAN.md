@@ -71,7 +71,7 @@ all steps are checkboxes and should be marked as they are completed.
 ## phase 5b: assumption extraction
 - [x] implement recursive assumption extraction
 - [x] implement assumption chaining with parent links
-- [ ] implement assumption category classifier
+- [x] implement assumption category classifier
 - [x] persist assumptions and relationships
 - [x] expose api endpoint for assumption extraction
 

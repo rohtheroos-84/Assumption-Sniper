@@ -25,6 +25,15 @@ class AssumptionsOutput(BaseModel):
     assumptions: list[AssumptionItem] = Field(default_factory=list)
 
 
+class ClassificationItem(BaseModel):
+    assumption_text: str
+    category: str
+
+
+class ClassificationOutput(BaseModel):
+    classifications: list[ClassificationItem] = Field(default_factory=list)
+
+
 class CritiqueItem(BaseModel):
     critique_id: Optional[str] = None
     assumption_id: Optional[str] = None

@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 class AITask(str, Enum):
     decomposition = "decomposition"
     assumptions = "assumptions"
+    assumption_classification = "assumption_classification"
     critique = "critique"
     simulation = "simulation"
     reconstruction = "reconstruction"
@@ -17,6 +18,7 @@ class AITask(str, Enum):
 class ModelRole(str, Enum):
     decomposition = "decomposition"
     extraction = "extraction"
+    classifier = "classifier"
     skeptic = "skeptic"
     simulator = "simulator"
     reconstruction = "reconstruction"

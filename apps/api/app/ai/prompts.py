@@ -31,6 +31,15 @@ PROMPTS: dict[AITask, PromptTemplate] = {
         ),
         user="extract assumptions from this idea:\n\n{input_text}\n\nmax_depth={max_depth}",
     ),
+    AITask.assumption_classification: PromptTemplate(
+        role=ModelRole.classifier,
+        system=(
+            "you are an assumption classifier. given a list of short assumption statements, "
+            "assign each a single category label from: product, user, market, ops, legal, finance, tech, other. "
+            "return strict json mapping each assumption to a category."
+        ),
+        user="classify these assumptions (json array of strings):\n\n{input_text}",
+    ),
     AITask.critique: PromptTemplate(
         role=ModelRole.skeptic,
         system=(

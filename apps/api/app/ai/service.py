@@ -47,6 +47,7 @@ ROUTE_CONFIGS: dict[ModelRole, RouteConfig] = {
 TASK_MODELS: dict[str, tuple[ModelRole, Type[BaseModel]]] = {
     "decomposition": (ModelRole.decomposition, DecompositionOutput),
     "assumptions": (ModelRole.extraction, AssumptionsOutput),
+    "assumption_classification": (ModelRole.classifier, ClassificationOutput),
     "critique": (ModelRole.skeptic, CritiquesOutput),
     "simulation": (ModelRole.simulator, SimulationsOutput),
     "reconstruction": (ModelRole.reconstruction, ReconstructionOutput),
