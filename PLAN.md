@@ -95,9 +95,9 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] expose api endpoint for scores
 
 ## phase 5f: reconstruction
-- [ ] implement reconstruction engine
-- [ ] persist rebuilt idea and rationale
-- [ ] expose api endpoint for reconstruction
+- [x] implement reconstruction engine
+- [x] persist rebuilt idea and rationale
+- [x] expose api endpoint for reconstruction
 
 ## phase 5g: pipeline orchestration
 - [ ] implement end-to-end pipeline orchestration

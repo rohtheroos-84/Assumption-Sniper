@@ -19,6 +19,8 @@ from app.crud.core import create_assumption
 from app.ai.schemas_runtime import SimulationsOutput
 from app.crud.simulations import create_simulation
 from app.crud.scores import compute_and_persist_scores
+from app.crud.reconstructions import create_reconstruction
+from app.ai.schemas_runtime import ReconstructionOutput
 
 router = APIRouter()
 service = build_ai_service()
@@ -238,6 +240,47 @@ async def generate_simulations(
             return {"run_id": request.run_id, "status": "queued"}
 
         return await _run_and_persist_simulations(request)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/reconstructions")
+async def generate_reconstruction(
+    request: AIRequest,
+    session: AsyncSession = Depends(get_session),
+    background: bool = False,
+    background_tasks: BackgroundTasks | None = None,
+):
+    if request.task != request.task.__class__.reconstruction:
+        request.task = request.task.__class__.reconstruction
+
+    if not request.run_id:
+        from app.crud.core import create_run
+
+        run = await create_run(session, request.project_id)
+        request.run_id = run.id
+
+    async def _run_and_persist_recon(req: AIRequest):
+        r = await service.run(req)
+        parsed = r.parsed_output
+        try:
+            ro = ReconstructionOutput.model_validate(parsed)
+        except Exception:
+            ro = ReconstructionOutput(rebuilt_idea="", key_changes=[], risk_reductions=[], new_assumptions=[])
+
+        async with AsyncSessionLocal() as s:
+            rec = await create_reconstruction(s, req.project_id, ro.rebuilt_idea, key_changes=ro.key_changes, risk_reductions=ro.risk_reductions)
+
+        return {"id": rec.id, "rebuilt_idea": rec.rebuilt_idea, "raw": r.model_dump()}
+
+    try:
+        if background:
+            if background_tasks is None:
+                raise HTTPException(status_code=400, detail="background tasks not provided")
+            background_tasks.add_task(_run_and_persist_recon, request)
+            return {"run_id": request.run_id, "status": "queued"}
+
+        return await _run_and_persist_recon(request)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
