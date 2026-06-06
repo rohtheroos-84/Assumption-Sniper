@@ -16,6 +16,8 @@ import json
 from app.crud.critiques import create_critique
 from app.ai.schemas_runtime import CritiquesOutput
 from app.crud.core import create_assumption
+from app.ai.schemas_runtime import SimulationsOutput
+from app.crud.simulations import create_simulation
 
 router = APIRouter()
 service = build_ai_service()
@@ -187,5 +189,53 @@ async def generate_critiques(
             return {"run_id": request.run_id, "status": "queued"}
 
         return await _run_and_persist_critiques(request)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+
+@router.post("/simulations")
+async def generate_simulations(
+    request: AIRequest,
+    session: AsyncSession = Depends(get_session),
+    background: bool = False,
+    background_tasks: BackgroundTasks | None = None,
+):
+    if request.task != request.task.__class__.simulation:
+        request.task = request.task.__class__.simulation
+
+    if not request.run_id:
+        from app.crud.core import create_run
+
+        run = await create_run(session, request.project_id)
+        request.run_id = run.id
+
+    async def _run_and_persist_simulations(req: AIRequest):
+        r = await service.run(req)
+        parsed = r.parsed_output
+        try:
+            so = SimulationsOutput.model_validate(parsed)
+        except Exception:
+            so = SimulationsOutput(simulations=[])
+
+        created = []
+        async with AsyncSessionLocal() as s:
+            for it in so.simulations:
+                likelihood = getattr(it, "likelihood", None)
+                impact = getattr(it, "impact", None)
+                affected = getattr(it, "affected_assumptions", [])
+                sim = await create_simulation(s, req.project_id, it.scenario, likelihood=likelihood, impact=impact, affected_assumptions=affected)
+                created.append(sim)
+
+        return {"created": [{"id": sim.id, "scenario": sim.scenario} for sim in created], "raw": r.model_dump()}
+
+    try:
+        if background:
+            if background_tasks is None:
+                raise HTTPException(status_code=400, detail="background tasks not provided")
+            background_tasks.add_task(_run_and_persist_simulations, request)
+            return {"run_id": request.run_id, "status": "queued"}
+
+        return await _run_and_persist_simulations(request)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc

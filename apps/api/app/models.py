@@ -100,6 +100,7 @@ class Simulation(Base):
     scenario = Column(Text, nullable=False)
     impact = Column(Integer, nullable=True)
     likelihood = Column(Integer, nullable=True)
+    affected_assumptions_json = Column(JSON, nullable=True)
 
 
 class Reconstruction(Base):
