@@ -76,23 +76,23 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] expose api endpoint for assumption extraction
 
 ## phase 5c: skeptic mode
-- [ ] implement critique generator per assumption
-- [ ] add critique severity scoring
-- [ ] persist critiques
-- [ ] expose api endpoint for critiques
+- [x] implement critique generator per assumption
+- [x] add critique severity scoring
+- [x] persist critiques
+- [x] expose api endpoint for critiques
 
 ## phase 5d: edge case simulator
-- [ ] implement scenario generator
-- [ ] implement impact scoring for scenarios
-- [ ] persist simulations
-- [ ] expose api endpoint for simulations
+- [x] implement scenario generator
+- [x] implement impact scoring for scenarios
+- [x] persist simulations
+- [x] expose api endpoint for simulations
 
 ## phase 5e: confidence scoring
-- [ ] implement confidence score calculator
-- [ ] implement dependency weight calculation
-- [ ] implement impact severity calculation
-- [ ] persist scores
-- [ ] expose api endpoint for scores
+- [x] implement confidence score calculator
+- [x] implement dependency weight calculation
+- [x] implement impact severity calculation
+- [x] persist scores
+- [x] expose api endpoint for scores
 
 ## phase 5f: reconstruction
 - [ ] implement reconstruction engine

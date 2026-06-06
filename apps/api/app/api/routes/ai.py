@@ -18,6 +18,7 @@ from app.ai.schemas_runtime import CritiquesOutput
 from app.crud.core import create_assumption
 from app.ai.schemas_runtime import SimulationsOutput
 from app.crud.simulations import create_simulation
+from app.crud.scores import compute_and_persist_scores
 
 router = APIRouter()
 service = build_ai_service()
@@ -239,3 +240,32 @@ async def generate_simulations(
         return await _run_and_persist_simulations(request)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+
+    @router.post("/scores")
+    async def compute_scores(
+        request: AIRequest,
+        session: AsyncSession = Depends(get_session),
+        background: bool = False,
+        background_tasks: BackgroundTasks | None = None,
+    ):
+        if not request.project_id:
+            raise HTTPException(status_code=400, detail="project_id required")
+
+        async def _compute():
+            async with AsyncSessionLocal() as s:
+                scores = await compute_and_persist_scores(s, request.project_id)
+            return scores
+
+        try:
+            if background:
+                if background_tasks is None:
+                    raise HTTPException(status_code=400, detail="background tasks not provided")
+                background_tasks.add_task(_compute)
+                return {"project_id": request.project_id, "status": "queued"}
+
+            scores = await _compute()
+            return {"created": [{"id": sc.id, "assumption_id": sc.assumption_id, "risk_score": sc.risk_score} for sc in scores]}
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
