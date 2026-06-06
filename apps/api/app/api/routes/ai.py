@@ -13,6 +13,9 @@ from app.ai.schemas_runtime import AssumptionsOutput, ClassificationOutput
 from app.ai.schemas import AITask
 from app.db import AsyncSessionLocal
 import json
+from app.crud.critiques import create_critique
+from app.ai.schemas_runtime import CritiquesOutput
+from app.crud.core import create_assumption
 
 router = APIRouter()
 service = build_ai_service()
@@ -127,5 +130,62 @@ async def extract_assumptions(
         # synchronous
         result = await _run_and_persist(request, request.run_id)
         return result.model_dump()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+
+@router.post("/critiques")
+async def generate_critiques(
+    request: AIRequest,
+    session: AsyncSession = Depends(get_session),
+    background: bool = False,
+    background_tasks: BackgroundTasks | None = None,
+    assumption_id: str | None = None,
+):
+    if request.task != request.task.__class__.critique:
+        request.task = request.task.__class__.critique
+
+    if not request.run_id:
+        from app.crud.core import create_run
+
+        run = await create_run(session, request.project_id)
+        request.run_id = run.id
+
+    async def _run_and_persist_critiques(req: AIRequest):
+        r = await service.run(req)
+        parsed = r.parsed_output
+        try:
+            co = CritiquesOutput.model_validate(parsed)
+        except Exception:
+            co = CritiquesOutput(critiques=[])
+
+        created = []
+        async with AsyncSessionLocal() as s:
+            for it in co.critiques:
+                a_id = it.assumption_id or assumption_id
+                if not a_id:
+                    # create the assumption record if missing
+                    a = await create_assumption(s, req.project_id, it.critique_text)
+                    a_id = a.id
+
+                severity = getattr(it, "severity", None)
+                if severity is None:
+                    # fallback heuristic
+                    severity = min(100, max(0, len(it.critique_text) // 5))
+
+                c = await create_critique(s, req.project_id, a_id, it.critique_text, severity=severity)
+                created.append(c)
+
+        return {"created": [{"id": c.id, "severity": c.severity} for c in created], "raw": r.model_dump()}
+
+    try:
+        if background:
+            if background_tasks is None:
+                raise HTTPException(status_code=400, detail="background tasks not provided")
+            background_tasks.add_task(_run_and_persist_critiques, request)
+            return {"run_id": request.run_id, "status": "queued"}
+
+        return await _run_and_persist_critiques(request)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
