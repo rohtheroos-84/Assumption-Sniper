@@ -100,10 +100,10 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] expose api endpoint for reconstruction
 
 ## phase 5g: pipeline orchestration
-- [ ] implement end-to-end pipeline orchestration
-- [ ] implement streaming updates for each stage
-- [ ] implement cancellation and retry
-- [ ] persist pipeline run metadata
+- [x] implement end-to-end pipeline orchestration
+- [x] implement streaming updates for each stage
+- [x] implement cancellation and retry
+- [x] persist pipeline run metadata
 
 ## phase 6: frontend foundation
 - [ ] scaffold next.js app
