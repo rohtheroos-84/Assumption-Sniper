@@ -61,3 +61,11 @@ async def record_run_usage(
     )
     await session.execute(stmt)
     await session.commit()
+
+
+async def update_run_status(session: AsyncSession, run_id: str, status: str) -> None:
+    stmt = (
+        update(Run).where(Run.id == run_id).values(status=status)
+    )
+    await session.execute(stmt)
+    await session.commit()
