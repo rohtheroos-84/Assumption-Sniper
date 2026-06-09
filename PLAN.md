@@ -106,15 +106,15 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] persist pipeline run metadata
 
 ## phase 6: frontend foundation
-- [ ] scaffold next.js app
-- [ ] configure tailwindcss and base theme
-- [ ] create typography scale and spacing system
-- [ ] implement layout shell and navigation
-- [ ] implement api client with streaming support
-- [ ] implement global state for project runs
-- [ ] implement error and empty states
-- [ ] add loading and progress indicators
-- [ ] add basic analytics hooks
+- [x] scaffold next.js app
+- [x] configure tailwindcss and base theme
+- [x] create typography scale and spacing system
+- [x] implement layout shell and navigation
+- [x] implement api client with streaming support
+- [x] implement global state for project runs
+- [x] implement error and empty states
+- [x] add loading and progress indicators
+- [x] add basic analytics hooks
 
 ## phase 7: core ui screens
 - [ ] build idea input screen with validation
