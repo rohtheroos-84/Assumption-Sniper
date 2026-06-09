@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #__next {
+  height: 100%;
+}
+
+body {
+  @apply bg-bg text-white font-sans;
+}
+
+/* simple rhythm */
+.h-container { @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 }
