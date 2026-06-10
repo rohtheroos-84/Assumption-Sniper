@@ -117,15 +117,15 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] add basic analytics hooks
 
 ## phase 7: core ui screens
-- [ ] build idea input screen with validation
-- [ ] build run progress screen with live updates
-- [ ] build results overview screen
-- [ ] build assumption list and detail view
-- [ ] build critique list and severity filters
-- [ ] build edge case list and impact view
-- [ ] build reconstruction comparison view
-- [ ] add shareable report export
-- [ ] add history list for past runs
+- [x] build idea input screen with validation
+- [x] build run progress screen with live updates
+- [x] build results overview screen
+- [x] build assumption list and detail view
+- [x] build critique list and severity filters
+- [x] build edge case list and impact view
+- [x] build reconstruction comparison view
+- [x] add shareable report export
+- [x] add history list for past runs
 
 ## phase 8: visualization dashboard
 - [ ] implement assumption graph visualization
