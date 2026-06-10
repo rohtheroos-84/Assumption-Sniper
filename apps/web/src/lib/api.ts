@@ -32,3 +32,33 @@ export async function fetchRun(run_id:string){
   if(!res.ok) throw new Error('fetch run failed')
   return res.json()
 }
+
+export async function fetchRuns(){
+  const res = await fetch(`${BASE}/api/v1/runs`)
+  if(!res.ok) throw new Error('fetch runs failed')
+  return res.json()
+}
+
+export async function fetchAssumptions(run_id:string){
+  const res = await fetch(`${BASE}/api/v1/runs/${run_id}/assumptions`)
+  if(!res.ok) throw new Error('fetch assumptions failed')
+  return res.json()
+}
+
+export async function fetchCritiques(run_id:string){
+  const res = await fetch(`${BASE}/api/v1/runs/${run_id}/critiques`)
+  if(!res.ok) throw new Error('fetch critiques failed')
+  return res.json()
+}
+
+export async function fetchSimulations(run_id:string){
+  const res = await fetch(`${BASE}/api/v1/runs/${run_id}/simulations`)
+  if(!res.ok) throw new Error('fetch simulations failed')
+  return res.json()
+}
+
+export async function fetchReconstructions(run_id:string){
+  const res = await fetch(`${BASE}/api/v1/runs/${run_id}/reconstructions`)
+  if(!res.ok) throw new Error('fetch reconstructions failed')
+  return res.json()
+}
