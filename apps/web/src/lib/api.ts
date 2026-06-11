@@ -62,3 +62,9 @@ export async function fetchReconstructions(run_id:string){
   if(!res.ok) throw new Error('fetch reconstructions failed')
   return res.json()
 }
+
+export async function fetchScores(run_id:string){
+  const res = await fetch(`${BASE}/api/v1/runs/${run_id}/scores`)
+  if(!res.ok) throw new Error('fetch scores failed')
+  return res.json()
+}
