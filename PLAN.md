@@ -128,9 +128,9 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] add history list for past runs
 
 ## phase 8: visualization dashboard
-- [ ] implement assumption graph visualization
-- [ ] implement dependency tree visualization
-- [ ] implement risk heatmap visualization
+- [x] implement assumption graph visualization
+- [x] implement dependency tree visualization
+- [x] implement risk heatmap visualization
 - [ ] implement confidence radar visualization
 - [ ] implement contradiction map view
 - [ ] add interaction patterns: zoom, filter, focus
