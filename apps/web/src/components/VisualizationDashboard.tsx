@@ -68,6 +68,206 @@ function sectionCard(title: string, subtitle: string, body: React.ReactNode){
   )
 }
 
+function ConfidenceRadarVisualization({ scores, assumptions }: { scores: Score[]; assumptions: Assumption[] }){
+  const size = 300
+  const center = size / 2
+  const maxRadius = size / 2.5
+
+  const categories = Array.from(new Set(assumptions.map((a) => a.category || 'uncategorized'))).slice(0, 6)
+  const categoryScores = categories.map((cat) => {
+    const catAssumptions = assumptions.filter((a) => a.category === cat || (!a.category && cat === 'uncategorized'))
+    const catScores = catAssumptions.flatMap((a) => scores.filter((s) => s.assumption_id === a.id))
+    const avgConfidence = catScores.length > 0 ? Math.round(catScores.reduce((sum, s) => sum + (s.confidence_score ?? 0), 0) / catScores.length) : 0
+    const avgEvidence = catScores.length > 0 ? Math.round(catScores.reduce((sum, s) => sum + (s.evidence_strength ?? 0), 0) / catScores.length) : 0
+    return { category: cat, confidence: avgConfidence, evidence: avgEvidence, count: catAssumptions.length }
+  })
+
+  const angleSlice = (Math.PI * 2) / categories.length
+  const radarPoints = categoryScores.map((item, idx) => {
+    const angle = angleSlice * idx - Math.PI / 2
+    const r1 = (item.confidence / 100) * maxRadius
+    const x1 = center + r1 * Math.cos(angle)
+    const y1 = center + r1 * Math.sin(angle)
+    return { ...item, angle, x: x1, y: y1, r: r1 }
+  })
+
+  const pointsStr = radarPoints.map((p) => `${p.x},${p.y}`).join(' ')
+
+  if (!assumptions.length) {
+    return <div className="rounded-xl border border-dashed border-gray-700 bg-black/20 p-6 text-sm text-gray-400">No confidence data yet.</div>
+  }
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg viewBox={`0 0 ${size} ${size}`} className="h-[300px] w-[300px]">
+        {/* grid rings */}
+        {[1, 2, 3, 4, 5].map((ring) => (
+          <circle key={`ring-${ring}`} cx={center} cy={center} r={(maxRadius / 5) * ring} fill="none" stroke="rgba(0,255,127,0.1)" strokeWidth={1} />
+        ))}
+        {/* axes */}
+        {radarPoints.map((p, idx) => (
+          <line key={`axis-${idx}`} x1={center} y1={center} x2={p.x + (p.x - center) * 0.2} y2={p.y + (p.y - center) * 0.2} stroke="rgba(0,255,127,0.2)" strokeWidth={1} />
+        ))}
+        {/* confidence polygon */}
+        <polygon points={pointsStr} fill="rgba(0,255,127,0.2)" stroke="#00FF7F" strokeWidth={2} />
+        {/* points */}
+        {radarPoints.map((p) => (
+          <g key={`point-${p.category}`}>
+            <circle cx={p.x} cy={p.y} r={5} fill="#00FF7F" stroke="#000" strokeWidth={1} />
+            <text x={p.x + (p.x - center) * 0.3} y={p.y + (p.y - center) * 0.3 + 3} textAnchor="middle" className="fill-gray-300 text-[10px] font-semibold" style={{ pointerEvents: 'none' }}>
+              {p.category.slice(0, 8)}
+            </text>
+          </g>
+        ))}
+      </svg>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {radarPoints.map((item) => (
+          <div key={item.category} className="rounded-lg border border-gray-800 bg-black/20 p-2 text-xs">
+            <div className="font-medium text-white">{item.category}</div>
+            <div className="text-gray-400">confidence: {item.confidence}%</div>
+            <div className="text-gray-400">evidence: {item.evidence}%</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ContradictionMapVisualization({ assumptions, critiques }: { assumptions: Assumption[]; critiques: Critique[] }){
+  const contradictions = useMemo(() => {
+    const result: { id: string; a1: Assumption; a2: Assumption; severity: number }[] = []
+    for (let i = 0; i < assumptions.length; i++) {
+      for (let j = i + 1; j < assumptions.length; j++) {
+        const a1 = assumptions[i]!
+        const a2 = assumptions[j]!
+        if ((a1.category === a2.category && a1.assumption_text?.toLowerCase().includes('not') !== a2.assumption_text?.toLowerCase().includes('not')) ||
+            (a1.assumption_text?.toLowerCase().localeCompare(a2.assumption_text?.toLowerCase() || '') || 0) > 0) {
+          const a1Critiques = critiques.filter((c) => c.assumption_id === a1.id)
+          const a2Critiques = critiques.filter((c) => c.assumption_id === a2.id)
+          const severity = Math.max(0, ...[...a1Critiques, ...a2Critiques].map((c) => c.severity ?? 0))
+          if (severity > 0) {
+            result.push({ id: `${a1.id}-${a2.id}`, a1: a1, a2: a2, severity })
+          }
+        }
+      }
+    }
+    return result
+  }, [assumptions, critiques])
+
+  if (!assumptions.length || !contradictions.length) {
+    return <div className="rounded-xl border border-dashed border-gray-700 bg-black/20 p-6 text-sm text-gray-400">No contradictions detected. Run the pipeline for a full analysis.</div>
+  }
+
+  return (
+    <div className="space-y-3">
+      {contradictions.slice(0, 10).map((contra) => (
+        <div key={contra.id} className="rounded-lg border border-gray-800 bg-black/20 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-sm font-medium text-white">Potential contradiction</div>
+            <div className="rounded-full bg-red-900/40 px-2 py-1 text-xs text-red-200">severity: {contra.severity}</div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-md border border-gray-700 bg-black/30 p-2">
+              <div className="text-xs text-gray-400">{contra.a1?.category || 'uncategorized'}</div>
+              <div className="mt-1 text-sm text-gray-200">{contra.a1?.assumption_text}</div>
+            </div>
+            <div className="rounded-md border border-gray-700 bg-black/30 p-2">
+              <div className="text-xs text-gray-400">{contra.a2?.category || 'uncategorized'}</div>
+              <div className="mt-1 text-sm text-gray-200">{contra.a2?.assumption_text}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function InteractionControls({ onZoom, onFilter, onFocus, categoryOptions, selectedCategory }: { onZoom: (level: number) => void; onFilter: (cat: string) => void; onFocus: (mode: 'all' | 'high-risk' | 'low-confidence') => void; categoryOptions: string[]; selectedCategory: string }){
+  return (
+    <div className="flex flex-wrap gap-3">
+      <div>
+        <label className="block text-xs text-gray-400">Zoom</label>
+        <div className="flex gap-1">
+          <button onClick={() => onZoom(0.8)} className="rounded border border-gray-700 bg-black/30 px-2 py-1 text-xs hover:bg-black/50">−</button>
+          <button onClick={() => onZoom(1)} className="rounded border border-gray-700 bg-black/30 px-2 py-1 text-xs hover:bg-black/50">1×</button>
+          <button onClick={() => onZoom(1.2)} className="rounded border border-gray-700 bg-black/30 px-2 py-1 text-xs hover:bg-black/50">+</button>
+        </div>
+      </div>
+      <div>
+        <label className="block text-xs text-gray-400">Filter</label>
+        <select value={selectedCategory} onChange={(e) => onFilter(e.target.value)} className="rounded border border-gray-700 bg-black/30 px-2 py-1 text-xs">
+          <option value="">All categories</option>
+          {categoryOptions.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-xs text-gray-400">Focus</label>
+        <div className="flex gap-1">
+          <button onClick={() => onFocus('all')} className="rounded border border-gray-700 bg-black/30 px-2 py-1 text-xs hover:bg-black/50">All</button>
+          <button onClick={() => onFocus('high-risk')} className="rounded border border-red-700/50 bg-red-900/20 px-2 py-1 text-xs text-red-200 hover:bg-red-900/40">High-risk</button>
+          <button onClick={() => onFocus('low-confidence')} className="rounded border border-yellow-700/50 bg-yellow-900/20 px-2 py-1 text-xs text-yellow-200 hover:bg-yellow-900/40">Low-conf</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function GraphSnapshotExport({ runId }: { runId: string }){
+  function downloadSvg(){
+    const svg = document.querySelector('svg')
+    if (!svg) {
+      alert('No visualization found to export')
+      return
+    }
+    const serializer = new XMLSerializer()
+    const svgString = serializer.serializeToString(svg)
+    const blob = new Blob([svgString], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `visualization-${runId}-${Date.now()}.svg`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function downloadPng(){
+    const canvas = document.createElement('canvas')
+    const svg = document.querySelector('svg')
+    if (!svg) {
+      alert('No visualization found to export')
+      return
+    }
+    const serializer = new XMLSerializer()
+    const svgString = serializer.serializeToString(svg)
+    const img = new Image()
+    img.onload = () => {
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = '#000000'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0)
+      const pngUrl = canvas.toDataURL('image/png')
+      const a = document.createElement('a')
+      a.href = pngUrl
+      a.download = `visualization-${runId}-${Date.now()}.png`
+      a.click()
+    }
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgString)
+  }
+
+  return (
+    <div className="flex gap-2">
+      <button onClick={downloadSvg} className="rounded border border-primary bg-primary/10 px-3 py-2 text-sm text-primary hover:bg-primary/20">Export SVG</button>
+      <button onClick={downloadPng} className="rounded border border-primary bg-primary/10 px-3 py-2 text-sm text-primary hover:bg-primary/20">Export PNG</button>
+    </div>
+  )
+}
+
 function AssumptionGraphVisualization({ assumptions }: { assumptions: Assumption[] }){
   const { nodes, edges, width, height } = useMemo(() => {
     const width = 920
@@ -288,6 +488,9 @@ export default function VisualizationDashboard({ runId }: { runId: string }){
   const [simulations, setSimulations] = useState<Simulation[]>([])
   const [scores, setScores] = useState<Score[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [focusMode, setFocusMode] = useState<'all' | 'high-risk' | 'low-confidence'>('all')
+  const [zoomLevel, setZoomLevel] = useState(1)
 
   useEffect(() => {
     let active = true
@@ -322,6 +525,15 @@ export default function VisualizationDashboard({ runId }: { runId: string }){
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-800 bg-surface/60 p-3">
+        <div>
+          <InteractionControls onZoom={setZoomLevel} onFilter={setSelectedCategory} onFocus={setFocusMode} categoryOptions={Array.from(new Set(assumptions.map((a) => a.category || 'uncategorized')))} selectedCategory={selectedCategory} />
+        </div>
+        <div>
+          <GraphSnapshotExport runId={runId} />
+        </div>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         {sectionCard(
           'Assumption graph',
@@ -332,6 +544,16 @@ export default function VisualizationDashboard({ runId }: { runId: string }){
           'Dependency tree',
           'Indented tree layout for spotting branches, roots, and deep dependency paths.',
           loading ? <div className="text-sm text-gray-400">Loading tree…</div> : <DependencyTreeVisualization assumptions={assumptions} />,
+        )}
+        {sectionCard(
+          'Confidence radar',
+          'Polar chart showing average confidence and evidence strength by category.',
+          loading ? <div className="text-sm text-gray-400">Loading radar…</div> : <ConfidenceRadarVisualization scores={scores} assumptions={assumptions} />,
+        )}
+        {sectionCard(
+          'Contradiction map',
+          'Detected potential contradictions between assumptions with severity indicators.',
+          loading ? <div className="text-sm text-gray-400">Loading map…</div> : <ContradictionMapVisualization assumptions={assumptions} critiques={critiques} />,
         )}
       </div>
 

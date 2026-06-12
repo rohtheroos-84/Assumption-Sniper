@@ -131,10 +131,10 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] implement assumption graph visualization
 - [x] implement dependency tree visualization
 - [x] implement risk heatmap visualization
-- [ ] implement confidence radar visualization
-- [ ] implement contradiction map view
-- [ ] add interaction patterns: zoom, filter, focus
-- [ ] add snapshot and export for graphs
+- [x] implement confidence radar visualization
+- [x] implement contradiction map view
+- [x] add interaction patterns: zoom, filter, focus
+- [x] add snapshot and export for graphs
 
 ## phase 9: multi-agent debate
 - [ ] define agent personas and prompts
