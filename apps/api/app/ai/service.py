@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import re
@@ -10,11 +11,14 @@ from typing import Any, Type
 from pydantic import BaseModel, ValidationError
 
 from app.ai.client import OpenRouterClient
-from app.ai.prompts import PROMPT_VERSION, PROMPTS
-from app.ai.schemas import AIRequest, AIResult, ModelRole, PromptMetadata
+from app.ai.prompts import DEFAULT_DEBATE_PERSONAS, DEBATE_PERSONAS, PROMPT_VERSION, PROMPTS
+from app.ai.schemas import AIRequest, AIResult, DebateRequest, ModelRole, PromptMetadata
 from app.ai.schemas_runtime import (
     AssumptionsOutput,
     CritiquesOutput,
+    DebateAgentResult,
+    DebateMergedCritique,
+    DebateOutput,
     DecompositionOutput,
     ReconstructionOutput,
     SimulationsOutput,
@@ -101,6 +105,14 @@ class AIService:
         system = prompt.system
         user = prompt.user.format(input_text=req.input_text, max_depth=req.max_depth)
         return role, system, user, route
+
+    @staticmethod
+    def _normalize_critique_key(critique_text: str, assumption_id: str | None = None) -> str:
+        normalized = re.sub(r"\s+", " ", critique_text.lower()).strip()
+        normalized = re.sub(r"[^a-z0-9\s]+", "", normalized)
+        if assumption_id:
+            return f"{assumption_id}:{normalized}"
+        return normalized
 
     @staticmethod
     def _extract_json(text: str) -> dict[str, Any]:
@@ -224,6 +236,139 @@ class AIService:
                     },
                 )
         return AIResult(task=req.task, metadata=metadata, raw_output=raw_output, parsed_output=parsed_output, usage=usage, warnings=warnings)
+
+    async def debate(self, req: DebateRequest) -> DebateOutput:
+        selected_keys = req.persona_keys or DEFAULT_DEBATE_PERSONAS
+        personas = [DEBATE_PERSONAS[key] for key in selected_keys if key in DEBATE_PERSONAS][: req.max_agents]
+        if not personas:
+            personas = [DEBATE_PERSONAS[key] for key in DEFAULT_DEBATE_PERSONAS[: req.max_agents]]
+
+        base_prompt = PROMPTS[AITask.critique]
+        base_role = base_prompt.role
+        route = ROUTE_CONFIGS[base_role]
+        metadata = PromptMetadata(
+            prompt_version=PROMPT_VERSION,
+            experiment_id=self._experiment_id(AIRequest(task=AITask.critique, input_text=req.input_text, dry_run=False), route.primary_model),
+            model=route.primary_model,
+            fallback_model=route.fallback_model,
+            cached=False,
+            safety_blocked=False,
+        )
+
+        if req.dry_run:
+            return DebateOutput(
+                metadata=metadata,
+                agents=[
+                    DebateAgentResult(
+                        key=persona.key,
+                        name=persona.name,
+                        focus=persona.focus,
+                        timeout_seconds=persona.timeout_seconds,
+                        temperature=persona.temperature,
+                        status="planned",
+                    )
+                    for persona in personas
+                ],
+                merged=[],
+            )
+
+        async def run_persona(persona: Any) -> DebateAgentResult:
+            system = f"{base_prompt.system}\n\nPersona focus: {persona.focus}\nPersona name: {persona.name}\nPersona instructions: {persona.system}"
+            user = base_prompt.user.format(input_text=req.input_text)
+            request = {
+                "model": route.primary_model,
+                "system": system,
+                "user": user,
+                "temperature": persona.temperature,
+                "max_tokens": route.max_tokens,
+            }
+            try:
+                result = await asyncio.wait_for(
+                    self.client.chat_completion(**request),
+                    timeout=min(persona.timeout_seconds, req.timeout_seconds),
+                )
+                raw_output = self.client.extract_text(result)
+                usage = self.client.extract_usage(result)
+                validated = self._repair_with_schema(raw_output, CritiquesOutput)
+                parsed = validated.parsed
+                critiques = CritiquesOutput.model_validate(parsed).critiques
+                warnings: list[str] = []
+                if validated.repaired:
+                    warnings.append("response_required_json_repair")
+                if req.run_id:
+                    cost_per_token = MODEL_PRICING.get(route.primary_model, Decimal("0.001"))
+                    token_total = int(usage.get("total_tokens") or 0)
+                    cost_usd = float(cost_per_token * Decimal(token_total))
+                    async with AsyncSessionLocal() as session:
+                        await record_run_usage(
+                            session,
+                            req.run_id,
+                            model_profile=route.primary_model,
+                            token_total=token_total,
+                            cost_usd=cost_usd,
+                        )
+                return DebateAgentResult(
+                    key=persona.key,
+                    name=persona.name,
+                    focus=persona.focus,
+                    timeout_seconds=persona.timeout_seconds,
+                    temperature=persona.temperature,
+                    status="completed",
+                    critiques=critiques,
+                    warnings=warnings,
+                )
+            except Exception as exc:
+                return DebateAgentResult(
+                    key=persona.key,
+                    name=persona.name,
+                    focus=persona.focus,
+                    timeout_seconds=persona.timeout_seconds,
+                    temperature=persona.temperature,
+                    status="failed",
+                    critiques=[],
+                    warnings=["debate_agent_failed"],
+                    error=str(exc),
+                )
+
+        agent_results = await asyncio.gather(*(run_persona(persona) for persona in personas))
+        merged_map: dict[str, DebateMergedCritique] = {}
+        for agent in agent_results:
+            for critique in agent.critiques:
+                key = self._normalize_critique_key(critique.critique_text, critique.assumption_id)
+                current = merged_map.get(key)
+                if current is None:
+                    merged_map[key] = DebateMergedCritique(
+                        critique_text=critique.critique_text,
+                        severity=critique.severity,
+                        assumption_id=critique.assumption_id,
+                        rationale=critique.rationale,
+                        sources=[agent.key],
+                    )
+                    continue
+                current.severity = max(current.severity, critique.severity)
+                if critique.assumption_id and not current.assumption_id:
+                    current.assumption_id = critique.assumption_id
+                if critique.rationale and critique.rationale not in (current.rationale or ""):
+                    current.rationale = f"{current.rationale}; {critique.rationale}" if current.rationale else critique.rationale
+                if agent.key not in current.sources:
+                    current.sources.append(agent.key)
+
+        merged = sorted(merged_map.values(), key=lambda item: (-item.severity, item.critique_text))
+
+        if req.run_id:
+            async with AsyncSessionLocal() as session:
+                await record_run_event(
+                    session,
+                    req.run_id,
+                    stage="debate",
+                    event_type="debate_completed",
+                    payload_json={
+                        "agents": [agent.model_dump() for agent in agent_results],
+                        "merged_count": len(merged),
+                    },
+                )
+
+        return DebateOutput(metadata=metadata, agents=agent_results, merged=merged)
 
 
 def build_ai_service() -> AIService:
