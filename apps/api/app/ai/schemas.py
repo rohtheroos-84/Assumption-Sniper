@@ -34,6 +34,17 @@ class AIRequest(BaseModel):
     max_depth: int = Field(default=3, ge=1, le=8)
 
 
+class DebateRequest(BaseModel):
+    input_text: str = Field(min_length=1)
+    project_id: Optional[str] = None
+    run_id: Optional[str] = None
+    user_id: Optional[str] = None
+    dry_run: bool = True
+    persona_keys: list[str] = Field(default_factory=list)
+    timeout_seconds: float = Field(default=12.0, ge=1.0, le=60.0)
+    max_agents: int = Field(default=3, ge=1, le=8)
+
+
 class PromptMetadata(BaseModel):
     prompt_version: str
     experiment_id: str
