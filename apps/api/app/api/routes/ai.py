@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 
-from app.ai.schemas import AIRequest
+from app.ai.schemas import AIRequest, DebateRequest
 from app.ai.service import build_ai_service
 from app.crud.decomposition import create_decomposition
 from app.db import get_session
@@ -20,7 +20,7 @@ from app.ai.schemas_runtime import SimulationsOutput
 from app.crud.simulations import create_simulation
 from app.crud.scores import compute_and_persist_scores
 from app.crud.reconstructions import create_reconstruction
-from app.ai.schemas_runtime import ReconstructionOutput
+from app.ai.schemas_runtime import ReconstructionOutput, DebateOutput
 
 router = APIRouter()
 service = build_ai_service()
@@ -192,6 +192,18 @@ async def generate_critiques(
             return {"run_id": request.run_id, "status": "queued"}
 
         return await _run_and_persist_critiques(request)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/debate")
+async def debate_review(
+    request: DebateRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    try:
+        result = await service.debate(request)
+        return result.model_dump()
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 

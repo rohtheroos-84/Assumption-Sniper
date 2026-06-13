@@ -14,6 +14,16 @@ class PromptTemplate:
     user: str
 
 
+@dataclass(frozen=True)
+class DebatePersona:
+    key: str
+    name: str
+    focus: str
+    system: str
+    temperature: float = 0.5
+    timeout_seconds: float = 12.0
+
+
 PROMPTS: dict[AITask, PromptTemplate] = {
     AITask.decomposition: PromptTemplate(
         role=ModelRole.decomposition,
@@ -65,3 +75,52 @@ PROMPTS: dict[AITask, PromptTemplate] = {
         user="rebuild this idea into a stronger version:\n\n{input_text}",
     ),
 }
+
+DEBATE_PERSONAS: dict[str, DebatePersona] = {
+    "red_team": DebatePersona(
+        key="red_team",
+        name="Red Team",
+        focus="attack hidden assumptions and failure modes",
+        system=(
+            "you are the red team reviewer. challenge hidden assumptions, expose brittle logic, "
+            "and prioritize concrete counterexamples. return strict json only."
+        ),
+        temperature=0.5,
+        timeout_seconds=10.0,
+    ),
+    "operator": DebatePersona(
+        key="operator",
+        name="Operator",
+        focus="deployment, maintainability, and observability",
+        system=(
+            "you are an operations-minded reviewer. focus on deployability, maintainability, cost, "
+            "alerting, and incident risk. return strict json only."
+        ),
+        temperature=0.35,
+        timeout_seconds=10.0,
+    ),
+    "customer": DebatePersona(
+        key="customer",
+        name="Customer Advocate",
+        focus="user value, adoption risk, and product fit",
+        system=(
+            "you are a customer advocate. challenge unclear value, weak differentiation, and adoption risk. "
+            "return strict json only."
+        ),
+        temperature=0.45,
+        timeout_seconds=10.0,
+    ),
+    "adversary": DebatePersona(
+        key="adversary",
+        name="Adversary",
+        focus="abuse cases, edge cases, and adversarial behavior",
+        system=(
+            "you are an adversarial reviewer. look for abuse cases, bad inputs, misleading claims, and edge cases. "
+            "return strict json only."
+        ),
+        temperature=0.55,
+        timeout_seconds=10.0,
+    ),
+}
+
+DEFAULT_DEBATE_PERSONAS = ["red_team", "operator", "customer"]
