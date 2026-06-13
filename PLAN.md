@@ -137,9 +137,9 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] add snapshot and export for graphs
 
 ## phase 9: multi-agent debate
-- [ ] define agent personas and prompts
-- [ ] run agents in parallel with timeouts
-- [ ] merge and deduplicate agent critiques
+- [x] define agent personas and prompts
+- [x] run agents in parallel with timeouts
+- [x] merge and deduplicate agent critiques
 - [ ] attribute critiques to agent roles
 - [ ] add ui to compare agent perspectives
 - [ ] allow toggling agents on or off per run

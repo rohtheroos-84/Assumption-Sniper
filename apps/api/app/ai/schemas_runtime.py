@@ -4,6 +4,8 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
+from app.ai.schemas import PromptMetadata
+
 
 class DecompositionOutput(BaseModel):
     targets: list[str] = Field(default_factory=list)
@@ -44,6 +46,32 @@ class CritiqueItem(BaseModel):
 
 class CritiquesOutput(BaseModel):
     critiques: list[CritiqueItem] = Field(default_factory=list)
+
+
+class DebateAgentResult(BaseModel):
+    key: str
+    name: str
+    focus: str
+    timeout_seconds: float
+    temperature: float
+    status: str = "pending"
+    critiques: list[CritiqueItem] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    error: Optional[str] = None
+
+
+class DebateMergedCritique(BaseModel):
+    critique_text: str
+    severity: int = Field(ge=0, le=100)
+    assumption_id: Optional[str] = None
+    rationale: Optional[str] = None
+    sources: list[str] = Field(default_factory=list)
+
+
+class DebateOutput(BaseModel):
+    metadata: PromptMetadata
+    agents: list[DebateAgentResult] = Field(default_factory=list)
+    merged: list[DebateMergedCritique] = Field(default_factory=list)
 
 
 class SimulationItem(BaseModel):
