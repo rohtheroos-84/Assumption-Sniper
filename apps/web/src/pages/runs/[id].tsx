@@ -9,6 +9,7 @@ import EdgeCaseList from '../../components/EdgeCaseList'
 import ReconstructionComparison from '../../components/ReconstructionComparison'
 import ShareExport from '../../components/ShareExport'
 import VisualizationDashboard from '../../components/VisualizationDashboard'
+import DebateComparison from '../../components/DebateComparison'
 
 export default function RunDetail(){
   const router = useRouter()
@@ -36,6 +37,7 @@ export default function RunDetail(){
             <button onClick={()=>setTab('simulations')} className={`px-3 py-1 rounded ${tab==='simulations'? 'bg-primary text-black':'text-gray-300'}`}>Edge cases</button>
             <button onClick={()=>setTab('reconstructions')} className={`px-3 py-1 rounded ${tab==='reconstructions'? 'bg-primary text-black':'text-gray-300'}`}>Reconstructions</button>
             <button onClick={()=>setTab('visualizations')} className={`px-3 py-1 rounded ${tab==='visualizations'? 'bg-primary text-black':'text-gray-300'}`}>Visualizations</button>
+            <button onClick={()=>setTab('debate')} className={`px-3 py-1 rounded ${tab==='debate'? 'bg-primary text-black':'text-gray-300'}`}>Debate</button>
           </nav>
         </div>
 
@@ -49,6 +51,7 @@ export default function RunDetail(){
           {tab==='simulations' && <EdgeCaseList runId={id as string} />}
           {tab==='reconstructions' && <ReconstructionComparison runId={id as string} />}
           {tab==='visualizations' && <VisualizationDashboard runId={id as string} />}
+          {tab==='debate' && <DebateComparison run={run} />}
         </div>
       </div>
     </Layout>
