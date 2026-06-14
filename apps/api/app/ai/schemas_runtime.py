@@ -66,6 +66,7 @@ class DebateMergedCritique(BaseModel):
     assumption_id: Optional[str] = None
     rationale: Optional[str] = None
     sources: list[str] = Field(default_factory=list)
+    source_roles: list[str] = Field(default_factory=list)
 
 
 class DebateOutput(BaseModel):

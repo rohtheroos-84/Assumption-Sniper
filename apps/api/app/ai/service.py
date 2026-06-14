@@ -343,6 +343,7 @@ class AIService:
                         assumption_id=critique.assumption_id,
                         rationale=critique.rationale,
                         sources=[agent.key],
+                        source_roles=[agent.name],
                     )
                     continue
                 current.severity = max(current.severity, critique.severity)
@@ -352,6 +353,8 @@ class AIService:
                     current.rationale = f"{current.rationale}; {critique.rationale}" if current.rationale else critique.rationale
                 if agent.key not in current.sources:
                     current.sources.append(agent.key)
+                if agent.name not in current.source_roles:
+                    current.source_roles.append(agent.name)
 
         merged = sorted(merged_map.values(), key=lambda item: (-item.severity, item.critique_text))
 

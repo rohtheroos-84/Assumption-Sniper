@@ -68,3 +68,13 @@ export async function fetchScores(run_id:string){
   if(!res.ok) throw new Error('fetch scores failed')
   return res.json()
 }
+
+export async function runDebate(input: { input_text: string; run_id?: string; project_id?: string; persona_keys?: string[]; max_agents?: number; timeout_seconds?: number; dry_run?: boolean }){
+  const res = await fetch(`${BASE}/api/v1/ai/debate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  if(!res.ok) throw new Error('run debate failed')
+  return res.json()
+}

@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import AsyncSessionLocal
@@ -14,9 +15,37 @@ from app.crud.core import create_run, record_run_event, update_run_status
 from app.pipeline.orchestrator import orchestrator
 from app.db import get_session
 from fastapi import Depends
-from app.models import Run, RunEvent
+from app.models import Run, RunEvent, Project
 
 router = APIRouter()
+
+
+@router.get("/runs/{run_id}")
+async def get_run(run_id: str, session: AsyncSession = Depends(get_session)):
+    stmt = select(Run, Project).join(Project, Run.project_id == Project.id).where(Run.id == run_id)
+    result = await session.execute(stmt)
+    row = result.first()
+    if not row:
+        raise HTTPException(status_code=404, detail="run not found")
+
+    run, project = row
+    return {
+        "id": run.id,
+        "project_id": run.project_id,
+        "status": run.status,
+        "started_at": run.started_at,
+        "finished_at": run.finished_at,
+        "model_profile": run.model_profile,
+        "cost_usd": run.cost_usd,
+        "token_total": run.token_total,
+        "project": {
+            "id": project.id,
+            "title": project.title,
+            "input_text": project.input_text,
+        },
+        "input_text": project.input_text,
+        "title": project.title,
+    }
 
 
 @router.post("/runs/{run_id}/start")

@@ -140,9 +140,9 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] define agent personas and prompts
 - [x] run agents in parallel with timeouts
 - [x] merge and deduplicate agent critiques
-- [ ] attribute critiques to agent roles
-- [ ] add ui to compare agent perspectives
-- [ ] allow toggling agents on or off per run
+- [x] attribute critiques to agent roles
+- [x] add ui to compare agent perspectives
+- [x] allow toggling agents on or off per run
 
 ## phase 10: data and account readiness
 - [ ] add user accounts and auth flow
