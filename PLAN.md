@@ -145,12 +145,12 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] allow toggling agents on or off per run
 
 ## phase 10: data and account readiness
-- [ ] add user accounts and auth flow
-- [ ] add per-user projects and access control
-- [ ] add api keys for external access
-- [ ] add usage tracking and quotas
-- [ ] add team workspace model if needed
-- [ ] add billing integration if needed
+- [x] add user accounts and auth flow
+- [x] add per-user projects and access control
+- [x] add api keys for external access
+- [x] add usage tracking and quotas
+- [x] add team workspace model if needed
+- [x] add billing integration if needed
 
 ## phase 11: quality, tests, and evaluation
 - [ ] write unit tests for scoring logic
