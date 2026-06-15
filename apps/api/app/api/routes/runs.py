@@ -4,24 +4,24 @@ import asyncio
 import json
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from fastapi.responses import StreamingResponse
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import AsyncSessionLocal
-from app.crud.core import create_run, record_run_event, update_run_status
+from app.crud.core import create_run, record_run_event, update_run_status, get_project
 from app.pipeline.orchestrator import orchestrator
 from app.db import get_session
-from fastapi import Depends
+from app.api.deps import get_current_user
 from app.models import Run, RunEvent, Project
 
 router = APIRouter()
 
 
 @router.get("/runs/{run_id}")
-async def get_run(run_id: str, session: AsyncSession = Depends(get_session)):
+async def get_run(run_id: str, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
     stmt = select(Run, Project).join(Project, Run.project_id == Project.id).where(Run.id == run_id)
     result = await session.execute(stmt)
     row = result.first()
@@ -49,9 +49,15 @@ async def get_run(run_id: str, session: AsyncSession = Depends(get_session)):
 
 
 @router.post("/runs/{run_id}/start")
-async def start_run(run_id: str, project_id: str | None = None, background: bool = True, background_tasks: BackgroundTasks | None = None, session: AsyncSession = Depends(get_session)):
+async def start_run(run_id: str, project_id: str | None = None, background: bool = True, background_tasks: BackgroundTasks | None = None, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
     # if run doesn't exist, create one
     if not run_id or run_id == "new":
+        # verify project ownership
+        if not project_id:
+            raise HTTPException(status_code=400, detail="project_id required")
+        project = await get_project(session, project_id)
+        if not project or project.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="forbidden")
         run = await create_run(session, project_id)
         run_id = run.id
     if not project_id:
@@ -69,14 +75,14 @@ async def start_run(run_id: str, project_id: str | None = None, background: bool
 
 
 @router.post("/runs/{run_id}/cancel")
-async def cancel_run(run_id: str, session: AsyncSession = Depends(get_session)):
+async def cancel_run(run_id: str, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
     await update_run_status(session, run_id, "cancelled")
     await record_run_event(session, run_id, stage="orchestration", event_type="cancel_requested", payload_json={})
     return {"run_id": run_id, "status": "cancelled"}
 
 
 @router.post("/runs/{run_id}/retry")
-async def retry_run(run_id: str, background: bool = True, background_tasks: BackgroundTasks | None = None, session: AsyncSession = Depends(get_session)):
+async def retry_run(run_id: str, background: bool = True, background_tasks: BackgroundTasks | None = None, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
     # reset status and re-queue
     await update_run_status(session, run_id, "queued")
     await record_run_event(session, run_id, stage="orchestration", event_type="retry_requested", payload_json={})

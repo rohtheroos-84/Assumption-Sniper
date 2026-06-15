@@ -29,6 +29,8 @@ class User(Base):
 
     id = Column(String, primary_key=True, default=gen_uuid)
     email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -161,3 +163,35 @@ class AuditLog(Base):
     user_agent = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     meta_json = Column(JSON, nullable=True)
+
+
+class APIKey(Base):
+    __tablename__ = "api_keys"
+
+    id = Column(String, primary_key=True, default=gen_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    key = Column(String, unique=True, index=True, nullable=False)
+    label = Column(String, nullable=True)
+    revoked = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class UsageRecord(Base):
+    __tablename__ = "usage_records"
+
+    id = Column(String, primary_key=True, default=gen_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=True)
+    run_id = Column(String, ForeignKey("runs.id"), nullable=True)
+    tokens = Column(Integer, nullable=True)
+    cost_usd = Column(Numeric(10, 4), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Team(Base):
+    __tablename__ = "teams"
+
+    id = Column(String, primary_key=True, default=gen_uuid)
+    name = Column(String, nullable=False)
+    owner_id = Column(String, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
