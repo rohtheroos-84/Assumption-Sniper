@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     openrouter_max_tokens: int = Field(1200, ge=32, le=8192)
     log_level: str = "INFO"
     log_json: bool = False
+    # auth / api key
+    jwt_secret: str = Field(...)
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_minutes: int = Field(60, ge=1)
     # request limits
     max_request_size_bytes: int = Field(65536, ge=1024)  # 64KB default
     run_creation_per_hour: int = Field(10, ge=1)
