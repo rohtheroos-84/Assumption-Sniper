@@ -12,7 +12,7 @@ settings = get_settings()
 
 # create async engine with a small pool
 engine: AsyncEngine = create_async_engine(
-    settings.database_url,
+    str(settings.database_url),
     echo=False,
     pool_pre_ping=True,
     future=True,
@@ -44,7 +44,7 @@ def get_redis():
     if _redis_client is None:
         import redis.asyncio as redis
 
-        _redis_client = redis.from_url(settings.redis_url, decode_responses=True)
+        _redis_client = redis.from_url(str(settings.redis_url), decode_responses=True)
     return _redis_client
 
 

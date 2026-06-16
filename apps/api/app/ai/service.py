@@ -12,9 +12,10 @@ from pydantic import BaseModel, ValidationError
 
 from app.ai.client import OpenRouterClient
 from app.ai.prompts import DEFAULT_DEBATE_PERSONAS, DEBATE_PERSONAS, PROMPT_VERSION, PROMPTS
-from app.ai.schemas import AIRequest, AIResult, DebateRequest, ModelRole, PromptMetadata
+from app.ai.schemas import AIRequest, AIResult, AITask, DebateRequest, ModelRole, PromptMetadata
 from app.ai.schemas_runtime import (
     AssumptionsOutput,
+    ClassificationOutput,
     CritiquesOutput,
     DebateAgentResult,
     DebateMergedCritique,
@@ -43,6 +44,7 @@ class RouteConfig:
 ROUTE_CONFIGS: dict[ModelRole, RouteConfig] = {
     ModelRole.decomposition: RouteConfig(settings.openrouter_fast_model, settings.openrouter_fallback_model, 0.1, settings.openrouter_max_tokens),
     ModelRole.extraction: RouteConfig(settings.openrouter_fast_model, settings.openrouter_fallback_model, 0.1, settings.openrouter_max_tokens),
+    ModelRole.classifier: RouteConfig(settings.openrouter_fast_model, settings.openrouter_fallback_model, 0.0, settings.openrouter_max_tokens),
     ModelRole.skeptic: RouteConfig(settings.openrouter_reasoning_model, settings.openrouter_fallback_model, 0.4, settings.openrouter_max_tokens),
     ModelRole.simulator: RouteConfig(settings.openrouter_reasoning_model, settings.openrouter_fallback_model, 0.4, settings.openrouter_max_tokens),
     ModelRole.reconstruction: RouteConfig(settings.openrouter_reasoning_model, settings.openrouter_fallback_model, 0.3, settings.openrouter_max_tokens),

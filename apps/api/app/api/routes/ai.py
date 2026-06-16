@@ -70,9 +70,9 @@ async def decompose(
 @router.post("/assumptions")
 async def extract_assumptions(
     request: AIRequest,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     background: bool = False,
-    background_tasks: BackgroundTasks | None = None,
 ):
     if request.task != request.task.__class__.assumptions:
         request.task = request.task.__class__.assumptions
@@ -126,9 +126,6 @@ async def extract_assumptions(
                 run = await create_run(session, request.project_id)
                 request.run_id = run.id
 
-            if background_tasks is None:
-                raise HTTPException(status_code=400, detail="background tasks not provided")
-
             background_tasks.add_task(_run_and_persist, request, request.run_id)
             return {"run_id": request.run_id, "status": "queued"}
 
@@ -143,9 +140,9 @@ async def extract_assumptions(
 @router.post("/critiques")
 async def generate_critiques(
     request: AIRequest,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     background: bool = False,
-    background_tasks: BackgroundTasks | None = None,
     assumption_id: str | None = None,
 ):
     if request.task != request.task.__class__.critique:
@@ -186,8 +183,6 @@ async def generate_critiques(
 
     try:
         if background:
-            if background_tasks is None:
-                raise HTTPException(status_code=400, detail="background tasks not provided")
             background_tasks.add_task(_run_and_persist_critiques, request)
             return {"run_id": request.run_id, "status": "queued"}
 
@@ -212,9 +207,9 @@ async def debate_review(
 @router.post("/simulations")
 async def generate_simulations(
     request: AIRequest,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     background: bool = False,
-    background_tasks: BackgroundTasks | None = None,
 ):
     if request.task != request.task.__class__.simulation:
         request.task = request.task.__class__.simulation
@@ -246,8 +241,6 @@ async def generate_simulations(
 
     try:
         if background:
-            if background_tasks is None:
-                raise HTTPException(status_code=400, detail="background tasks not provided")
             background_tasks.add_task(_run_and_persist_simulations, request)
             return {"run_id": request.run_id, "status": "queued"}
 
@@ -259,9 +252,9 @@ async def generate_simulations(
 @router.post("/reconstructions")
 async def generate_reconstruction(
     request: AIRequest,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     background: bool = False,
-    background_tasks: BackgroundTasks | None = None,
 ):
     if request.task != request.task.__class__.reconstruction:
         request.task = request.task.__class__.reconstruction
@@ -287,8 +280,6 @@ async def generate_reconstruction(
 
     try:
         if background:
-            if background_tasks is None:
-                raise HTTPException(status_code=400, detail="background tasks not provided")
             background_tasks.add_task(_run_and_persist_recon, request)
             return {"run_id": request.run_id, "status": "queued"}
 
@@ -297,30 +288,27 @@ async def generate_reconstruction(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
+@router.post("/scores")
+async def compute_scores(
+    request: AIRequest,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
+    background: bool = False,
+):
+    if not request.project_id:
+        raise HTTPException(status_code=400, detail="project_id required")
 
-    @router.post("/scores")
-    async def compute_scores(
-        request: AIRequest,
-        session: AsyncSession = Depends(get_session),
-        background: bool = False,
-        background_tasks: BackgroundTasks | None = None,
-    ):
-        if not request.project_id:
-            raise HTTPException(status_code=400, detail="project_id required")
+    async def _compute():
+        async with AsyncSessionLocal() as s:
+            scores = await compute_and_persist_scores(s, request.project_id)
+        return scores
 
-        async def _compute():
-            async with AsyncSessionLocal() as s:
-                scores = await compute_and_persist_scores(s, request.project_id)
-            return scores
+    try:
+        if background:
+            background_tasks.add_task(_compute)
+            return {"project_id": request.project_id, "status": "queued"}
 
-        try:
-            if background:
-                if background_tasks is None:
-                    raise HTTPException(status_code=400, detail="background tasks not provided")
-                background_tasks.add_task(_compute)
-                return {"project_id": request.project_id, "status": "queued"}
-
-            scores = await _compute()
-            return {"created": [{"id": sc.id, "assumption_id": sc.assumption_id, "risk_score": sc.risk_score} for sc in scores]}
-        except Exception as exc:
-            raise HTTPException(status_code=502, detail=str(exc)) from exc
+        scores = await _compute()
+        return {"created": [{"id": sc.id, "assumption_id": sc.assumption_id, "risk_score": sc.risk_score} for sc in scores]}
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
