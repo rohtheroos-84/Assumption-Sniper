@@ -43,11 +43,20 @@ class PipelineOrchestrator:
                     return
 
             try:
-                req = AIRequest(task=stage, input_text="", project_id=project_id, run_id=run_id, dry_run=False)
-                # fetch project input_text
+                input_text = ""
                 async with AsyncSessionLocal() as s:
                     proj = await s.get(Project, project_id)
-                    req.input_text = proj.input_text if proj else req.input_text
+                    input_text = proj.input_text if proj else input_text
+                if not input_text:
+                    input_text = " "
+
+                req = AIRequest(
+                    task=stage,
+                    input_text=input_text,
+                    project_id=project_id,
+                    run_id=run_id,
+                    dry_run=False,
+                )
 
                 evt_payload = {"stage": stage.value, "status": "running"}
                 async with AsyncSessionLocal() as s2:

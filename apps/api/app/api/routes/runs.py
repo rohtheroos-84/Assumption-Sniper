@@ -49,7 +49,14 @@ async def get_run(run_id: str, session: AsyncSession = Depends(get_session), cur
 
 
 @router.post("/runs/{run_id}/start")
-async def start_run(run_id: str, project_id: str | None = None, background: bool = True, background_tasks: BackgroundTasks | None = None, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
+async def start_run(
+    run_id: str,
+    background_tasks: BackgroundTasks,
+    project_id: str | None = None,
+    background: bool = True,
+    session: AsyncSession = Depends(get_session),
+    current_user=Depends(get_current_user),
+):
     # if run doesn't exist, create one
     if not run_id or run_id == "new":
         # verify project ownership
@@ -61,6 +68,9 @@ async def start_run(run_id: str, project_id: str | None = None, background: bool
         run = await create_run(session, project_id)
         run_id = run.id
     if not project_id:
+        run = await session.get(Run, run_id)
+        if not run:
+            raise HTTPException(status_code=404, detail="run not found")
         project_id = run.project_id
 
     if background:
@@ -82,7 +92,13 @@ async def cancel_run(run_id: str, session: AsyncSession = Depends(get_session), 
 
 
 @router.post("/runs/{run_id}/retry")
-async def retry_run(run_id: str, background: bool = True, background_tasks: BackgroundTasks | None = None, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
+async def retry_run(
+    run_id: str,
+    background_tasks: BackgroundTasks,
+    background: bool = True,
+    session: AsyncSession = Depends(get_session),
+    current_user=Depends(get_current_user),
+):
     # reset status and re-queue
     await update_run_status(session, run_id, "queued")
     await record_run_event(session, run_id, stage="orchestration", event_type="retry_requested", payload_json={})
