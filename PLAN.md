@@ -154,9 +154,9 @@ all steps are checkboxes and should be marked as they are completed.
 
 ## phase 11: quality, tests, and evaluation
 - [ ] write unit tests for scoring logic
-- [ ] write unit tests for prompt parsers
-- [ ] write integration tests for pipeline stages
-- [ ] write api contract tests
+- [x] write unit tests for prompt parsers
+- [x] write integration tests for pipeline stages
+- [x] write api contract tests
 - [ ] add ui component tests
 - [ ] add e2e tests for full workflow
 - [ ] create evaluation dataset of ideas and expected issues

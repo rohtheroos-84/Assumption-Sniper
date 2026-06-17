@@ -1,0 +1,30 @@
+{
+  "decomposition": {
+    "raw": "```json\n{\"targets\": [\"campus students\"], \"goals\": [\"fast delivery\"], \"dependencies\": [\"drivers\"], \"assumptions\": [\"students order daily\"], \"operational_requirements\": [\"cold storage\"]}\n```",
+    "expected_keys": ["targets", "goals", "dependencies", "assumptions", "operational_requirements"]
+  },
+  "assumptions": {
+    "raw": "{\"assumptions\": [{\"assumption_text\": \"users want free delivery\", \"category\": \"market\", \"depth\": 1}]}",
+    "expected_keys": ["assumptions"]
+  },
+  "assumptions_single_quotes": {
+    "raw": "{'assumptions': [{'assumption_text': 'users want free delivery', 'category': 'market', 'depth': 1}]}",
+    "repaired": true
+  },
+  "critiques": {
+    "raw": "{\"critiques\": [{\"critique_text\": \"unit economics are unrealistic\", \"severity\": 75, \"assumption_id\": \"a-1\"}]}",
+    "expected_keys": ["critiques"]
+  },
+  "simulations": {
+    "raw": "{\"simulations\": [{\"scenario\": \"driver shortage during finals\", \"likelihood\": 40, \"impact\": 70, \"affected_assumptions\": [\"a-1\"]}]}",
+    "expected_keys": ["simulations"]
+  },
+  "reconstruction": {
+    "raw": "{\"rebuilt_idea\": \"focus on one campus building\", \"key_changes\": [\"narrow scope\"], \"risk_reductions\": [\"pilot first\"]}",
+    "expected_keys": ["rebuilt_idea", "key_changes", "risk_reductions"]
+  },
+  "classification": {
+    "raw": "{\"classifications\": [{\"assumption_text\": \"users want free delivery\", \"category\": \"market\"}]}",
+    "expected_keys": ["classifications"]
+  }
+}

@@ -22,11 +22,17 @@ async def test_generate_simulations_sync(monkeypatch):
     async def fake_create_simulation(session, project_id, scenario, likelihood=None, impact=None, affected_assumptions=None):
         return SimpleNamespace(id="s1", scenario=scenario)
 
+    async def fake_create_run(session, project_id):
+        return SimpleNamespace(id="r1")
+
     monkeypatch.setattr(ai_routes, "service", SimpleNamespace(run=fake_run))
-    monkeypatch.setattr("app.crud.simulations.create_simulation", fake_create_simulation)
+    monkeypatch.setattr(ai_routes, "create_simulation", fake_create_simulation)
+    monkeypatch.setattr("app.crud.core.create_run", fake_create_run)
+
+    from fastapi import BackgroundTasks
 
     req = AIRequest(task=AITask.simulation, input_text="idea", project_id="p1", dry_run=False)
-    res = await ai_routes.generate_simulations(req, session=DummySession())
+    res = await ai_routes.generate_simulations(req, BackgroundTasks(), session=DummySession())
     assert "created" in res
     assert res["created"][0]["scenario"] == "heavy rain blocks routes"
 
@@ -46,6 +52,5 @@ async def test_generate_simulations_background(monkeypatch):
     from fastapi import BackgroundTasks
 
     bg = BackgroundTasks()
-    res = await ai_routes.generate_simulations(req, session=DummySession(), background=True, background_tasks=bg)
+    res = await ai_routes.generate_simulations(req, bg, session=DummySession(), background=True)
     assert res["status"] == "queued"
-*** End Patch
