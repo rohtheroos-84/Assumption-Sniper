@@ -36,10 +36,11 @@ async def test_extract_assumptions_sync(monkeypatch):
     monkeypatch.setattr("app.crud.core.create_run", fake_create_run)
 
     req = AIRequest(task=AITask.assumptions, input_text="idea", project_id="p1", dry_run=False)
-    res = await ai_routes.extract_assumptions(req, session=DummySession())
-    assert "raw" in res
-    assert "created" in res
-    assert res["created"][0]["text"] == "users want free delivery"
+    from fastapi import BackgroundTasks
+
+    res = await ai_routes.extract_assumptions(req, BackgroundTasks(), session=DummySession())
+    assert res["task"] == "assumptions"
+    assert res["parsed_output"]["assumptions"][0]["assumption_text"] == "users want free delivery"
 
 
 @pytest.mark.asyncio
@@ -57,7 +58,6 @@ async def test_extract_assumptions_background(monkeypatch):
     from fastapi import BackgroundTasks
 
     bg = BackgroundTasks()
-    res = await ai_routes.extract_assumptions(req, session=DummySession(), background=True, background_tasks=bg)
+    res = await ai_routes.extract_assumptions(req, bg, session=DummySession(), background=True)
     assert res["status"] == "queued"
     assert "run_id" in res
-*** End Patch

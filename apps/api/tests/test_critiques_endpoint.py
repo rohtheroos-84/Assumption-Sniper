@@ -25,12 +25,18 @@ async def test_generate_critiques_sync(monkeypatch):
     async def fake_create_critique(session, project_id, assumption_id, critique_text, severity=None):
         return SimpleNamespace(id="c1", severity=severity)
 
+    async def fake_create_run(session, project_id):
+        return SimpleNamespace(id="r1")
+
     monkeypatch.setattr(ai_routes, "service", SimpleNamespace(run=fake_run))
-    monkeypatch.setattr("app.crud.core.create_assumption", fake_create_assumption)
-    monkeypatch.setattr("app.crud.critiques.create_critique", fake_create_critique)
+    monkeypatch.setattr(ai_routes, "create_assumption", fake_create_assumption)
+    monkeypatch.setattr(ai_routes, "create_critique", fake_create_critique)
+    monkeypatch.setattr("app.crud.core.create_run", fake_create_run)
+
+    from fastapi import BackgroundTasks
 
     req = AIRequest(task=AITask.critique, input_text="assumption: xyz", project_id="p1", dry_run=False)
-    res = await ai_routes.generate_critiques(req, session=DummySession())
+    res = await ai_routes.generate_critiques(req, BackgroundTasks(), session=DummySession())
     assert "created" in res
     assert res["created"][0]["severity"] == 80
 
@@ -50,6 +56,5 @@ async def test_generate_critiques_background(monkeypatch):
     from fastapi import BackgroundTasks
 
     bg = BackgroundTasks()
-    res = await ai_routes.generate_critiques(req, session=DummySession(), background=True, background_tasks=bg)
+    res = await ai_routes.generate_critiques(req, bg, session=DummySession(), background=True)
     assert res["status"] == "queued"
-*** End Patch
