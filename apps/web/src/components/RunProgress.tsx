@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react'
-import useSWR from 'swr'
 import { useRun } from '../context/RunContext'
 
 export default function RunProgress(){
