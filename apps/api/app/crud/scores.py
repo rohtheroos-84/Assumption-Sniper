@@ -1,11 +1,32 @@
 from __future__ import annotations
 
-from typing import Any
-
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 
-from app.models import Score, Assumption, AssumptionEdge, Critique, Simulation
+from app.models import Assumption, AssumptionEdge, Critique, Score, Simulation
+
+
+def compute_risk_score(*, confidence: int, dep_count: int, max_impact: int) -> int:
+    """Higher risk when confidence is low, impact is high, and dependencies are numerous."""
+    return int(min(100, (100 - confidence) * (max_impact / 100) * (1 + dep_count / 5)))
+
+
+def max_simulation_impact_for_assumption(
+    *,
+    assumption_id: str,
+    assumption_text: str,
+    simulations: list[Simulation],
+) -> int:
+    max_impact = 0
+    for sim in simulations:
+        affected = sim.affected_assumptions_json or []
+        try:
+            if assumption_id in affected or assumption_text in affected:
+                if sim.impact is not None:
+                    max_impact = max(max_impact, int(sim.impact))
+        except Exception:
+            continue
+    return max_impact
 
 
 async def create_score(session: AsyncSession, project_id: str, assumption_id: str, *, confidence_score: int | None, dependency_weight: int | None, impact_severity: int | None, evidence_strength: int | None, risk_score: int | None) -> Score:
@@ -52,18 +73,13 @@ async def compute_and_persist_scores(session: AsyncSession, project_id: str) -> 
         qs = select(Simulation).where(Simulation.project_id == project_id)
         rs = await session.execute(qs)
         sims = rs.scalars().all()
-        max_impact = 0
-        for sim in sims:
-            affected = sim.affected_assumptions_json or []
-            try:
-                if a.id in affected or a.assumption_text in affected:
-                    if sim.impact is not None:
-                        max_impact = max(max_impact, int(sim.impact))
-            except Exception:
-                continue
+        max_impact = max_simulation_impact_for_assumption(
+            assumption_id=a.id,
+            assumption_text=a.assumption_text,
+            simulations=sims,
+        )
 
-        # compute risk score: higher when confidence low, impact high, and many deps
-        risk = int(min(100, (100 - confidence) * (max_impact / 100) * (1 + dep_count / 5) * 100 / 100))
+        risk = compute_risk_score(confidence=confidence, dep_count=dep_count, max_impact=max_impact)
 
         score = await create_score(
             session,
