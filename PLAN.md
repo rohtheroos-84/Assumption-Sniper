@@ -153,15 +153,15 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] add billing integration if needed
 
 ## phase 11: quality, tests, and evaluation
-- [ ] write unit tests for scoring logic
+- [x] write unit tests for scoring logic
 - [x] write unit tests for prompt parsers
 - [x] write integration tests for pipeline stages
 - [x] write api contract tests
-- [ ] add ui component tests
-- [ ] add e2e tests for full workflow
-- [ ] create evaluation dataset of ideas and expected issues
-- [ ] create automated evals for critique relevance
-- [ ] add regression tests for prompt changes
+- [x] add ui component tests
+- [x] add e2e tests for full workflow
+- [x] create evaluation dataset of ideas and expected issues
+- [x] create automated evals for critique relevance
+- [x] add regression tests for prompt changes
 
 ## phase 12: performance and reliability
 - [ ] add request batching where safe

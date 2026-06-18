@@ -21,8 +21,10 @@ jobs:
       - run: pnpm install
       - run: pnpm -C apps/web lint
       - run: pnpm -C apps/web typecheck
-      - run: pnpm -C apps/web test
       - run: pnpm -C apps/web build
+      - run: pnpm -C apps/web test
+      - run: pnpm -C apps/web exec playwright install chromium
+      - run: pnpm -C apps/web test:e2e
 
   api:
     runs-on: ubuntu-latest

@@ -1,0 +1,53 @@
+{
+  "version": "1",
+  "cases": [
+    {
+      "id": "campus-food-delivery",
+      "input_text": "On-demand hot food delivery to college dorms using gig drivers and a mobile app",
+      "expected_themes": ["unit economics", "driver supply", "campus logistics"],
+      "expected_keywords": ["driver", "cost", "margin", "delivery", "campus"],
+      "sample_critiques": [
+        {
+          "critique_text": "Gig driver supply is unreliable during finals week and breaks unit economics",
+          "severity": 78
+        },
+        {
+          "critique_text": "Campus delivery costs are underestimated without dedicated routing and cold-chain ops",
+          "severity": 72
+        }
+      ]
+    },
+    {
+      "id": "ai-tutor-high-school",
+      "input_text": "AI tutor that replaces human teachers for high school math with no sales team",
+      "expected_themes": ["adoption", "trust", "go-to-market"],
+      "expected_keywords": ["teacher", "school", "adoption", "trust", "sales"],
+      "sample_critiques": [
+        {
+          "critique_text": "School districts will not support adoption of an AI tutor without proven efficacy and procurement support",
+          "severity": 82
+        },
+        {
+          "critique_text": "No sales team means you cannot navigate district trust and compliance requirements",
+          "severity": 75
+        }
+      ]
+    },
+    {
+      "id": "subscription-luxury-water",
+      "input_text": "Subscription luxury water brand targeting mass-market grocery with zero marketing budget",
+      "expected_themes": ["positioning", "customer acquisition", "brand"],
+      "expected_keywords": ["luxury", "mass", "marketing", "brand", "cac"],
+      "sample_critiques": [
+        {
+          "critique_text": "Luxury positioning conflicts with mass-market grocery distribution and erodes brand",
+          "severity": 80
+        },
+        {
+          "critique_text": "Zero marketing budget makes customer acquisition cost assumptions unrealistic",
+          "severity": 77
+        }
+      ]
+    }
+  ]
+}
