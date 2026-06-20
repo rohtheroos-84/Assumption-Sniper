@@ -5,7 +5,11 @@ from typing import Optional
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
+from app.db import get_redis
 from app.models import Project, Run, Assumption, RunEvent
+
+settings = get_settings()
 
 
 async def create_project(session: AsyncSession, user_id: str, title: Optional[str], input_text: str) -> Project:
@@ -43,7 +47,46 @@ async def record_run_event(session: AsyncSession, run_id: str, stage: str, event
     session.add(event)
     await session.commit()
     await session.refresh(event)
+    if settings.sse_use_redis_pubsub:
+        redis = get_redis()
+        import json
+
+        message = {
+            "id": event.id,
+            "run_id": run_id,
+            "stage": stage,
+            "event_type": event_type,
+            "payload": payload_json,
+            "created_at": event.created_at.isoformat() if event.created_at else None,
+        }
+        await redis.publish(f"run_events:{run_id}", json.dumps(message))
     return event
+
+
+async def get_run_with_project(session: AsyncSession, run_id: str) -> tuple[Run, Project] | None:
+    stmt = select(Run, Project).join(Project, Run.project_id == Project.id).where(Run.id == run_id)
+    result = await session.execute(stmt)
+    row = result.first()
+    if not row:
+        return None
+    return row[0], row[1]
+
+
+async def list_runs_for_user(
+    session: AsyncSession,
+    user_id: str,
+    *,
+    limit: int,
+    cursor: str | None = None,
+):
+    from app.core.pagination import paginate_by_id
+
+    stmt = (
+        select(Run)
+        .join(Project, Run.project_id == Project.id)
+        .where(Project.user_id == user_id)
+    )
+    return await paginate_by_id(session, stmt, id_column=Run.id, limit=limit, cursor=cursor)
 
 
 async def record_run_usage(

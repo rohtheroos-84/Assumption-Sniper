@@ -94,3 +94,16 @@ async def compute_and_persist_scores(session: AsyncSession, project_id: str) -> 
         results.append(score)
 
     return results
+
+
+async def list_scores_for_project(
+    session: AsyncSession,
+    project_id: str,
+    *,
+    limit: int,
+    cursor: str | None = None,
+):
+    from app.core.pagination import paginate_by_id
+
+    stmt = select(Score).where(Score.project_id == project_id)
+    return await paginate_by_id(session, stmt, id_column=Score.id, limit=limit, cursor=cursor)
