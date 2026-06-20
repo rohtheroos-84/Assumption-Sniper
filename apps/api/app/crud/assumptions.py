@@ -49,7 +49,14 @@ async def create_assumptions_and_edges(session: AsyncSession, project_id: str, i
     return created
 
 
-async def get_assumptions_for_project(session: AsyncSession, project_id: str):
-    q = select(Assumption).where(Assumption.project_id == project_id)
-    r = await session.execute(q)
-    return r.scalars().all()
+async def list_assumptions_for_project(
+    session: AsyncSession,
+    project_id: str,
+    *,
+    limit: int,
+    cursor: str | None = None,
+):
+    from app.core.pagination import paginate_by_id
+
+    stmt = select(Assumption).where(Assumption.project_id == project_id)
+    return await paginate_by_id(session, stmt, id_column=Assumption.id, limit=limit, cursor=cursor)

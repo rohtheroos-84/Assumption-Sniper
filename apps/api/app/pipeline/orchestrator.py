@@ -11,6 +11,9 @@ from app.ai.service import build_ai_service
 from app.ai.schemas import AIRequest, AITask
 from app.crud.core import record_run_event, update_run_status
 from app.models import Project, Run
+from app.core.config import get_settings
+
+settings = get_settings()
 
 service = build_ai_service()
 
@@ -62,7 +65,19 @@ class PipelineOrchestrator:
                 async with AsyncSessionLocal() as s2:
                     await record_run_event(s2, run_id, stage=stage.value, event_type="stage_started", payload_json=evt_payload)
 
-                result = await service.run(req)
+                last_error: Exception | None = None
+                result = None
+                for attempt in range(settings.queue_task_max_retries + 1):
+                    try:
+                        result = await service.run(req)
+                        last_error = None
+                        break
+                    except Exception as exc:
+                        last_error = exc
+                        if attempt >= settings.queue_task_max_retries:
+                            raise
+                        await asyncio.sleep(0.5 * (attempt + 1))
+                assert result is not None
 
                 async with AsyncSessionLocal() as s3:
                     await record_run_event(s3, run_id, stage=stage.value, event_type="stage_completed", payload_json={"warnings": result.warnings})
