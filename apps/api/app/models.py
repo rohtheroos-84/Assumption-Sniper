@@ -9,6 +9,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -36,6 +37,7 @@ class User(Base):
 
 class Project(Base):
     __tablename__ = "projects"
+    __table_args__ = (Index("ix_projects_user_id", "user_id"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
@@ -48,6 +50,7 @@ class Project(Base):
 
 class Run(Base):
     __tablename__ = "runs"
+    __table_args__ = (Index("ix_runs_project_id", "project_id"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     project_id = Column(String, ForeignKey("projects.id"), nullable=False)
@@ -63,6 +66,7 @@ class Run(Base):
 
 class Assumption(Base):
     __tablename__ = "assumptions"
+    __table_args__ = (Index("ix_assumptions_project_id", "project_id"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     project_id = Column(String, ForeignKey("projects.id"), nullable=False)
@@ -86,6 +90,7 @@ class AssumptionEdge(Base):
 
 class Critique(Base):
     __tablename__ = "critiques"
+    __table_args__ = (Index("ix_critiques_project_id", "project_id"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     project_id = Column(String, ForeignKey("projects.id"), nullable=False)
@@ -96,6 +101,7 @@ class Critique(Base):
 
 class Simulation(Base):
     __tablename__ = "simulations"
+    __table_args__ = (Index("ix_simulations_project_id", "project_id"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     project_id = Column(String, ForeignKey("projects.id"), nullable=False)
@@ -107,6 +113,7 @@ class Simulation(Base):
 
 class Reconstruction(Base):
     __tablename__ = "reconstructions"
+    __table_args__ = (Index("ix_reconstructions_project_id", "project_id"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     project_id = Column(String, ForeignKey("projects.id"), nullable=False)
@@ -127,6 +134,7 @@ class Decomposition(Base):
 
 class Score(Base):
     __tablename__ = "scores"
+    __table_args__ = (Index("ix_scores_project_id", "project_id"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     project_id = Column(String, ForeignKey("projects.id"), nullable=False)
@@ -140,6 +148,7 @@ class Score(Base):
 
 class RunEvent(Base):
     __tablename__ = "run_events"
+    __table_args__ = (Index("ix_run_events_run_id_created_at", "run_id", "created_at"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     run_id = Column(String, ForeignKey("runs.id"), nullable=False)
@@ -178,6 +187,7 @@ class APIKey(Base):
 
 class UsageRecord(Base):
     __tablename__ = "usage_records"
+    __table_args__ = (Index("ix_usage_records_user_id_created_at", "user_id", "created_at"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     user_id = Column(String, ForeignKey("users.id"), nullable=True)
