@@ -16,7 +16,14 @@ async def create_simulation(session: AsyncSession, project_id: str, scenario: st
     return s
 
 
-async def get_simulations_for_project(session: AsyncSession, project_id: str):
-    q = select(Simulation).where(Simulation.project_id == project_id)
-    r = await session.execute(q)
-    return r.scalars().all()
+async def list_simulations_for_project(
+    session: AsyncSession,
+    project_id: str,
+    *,
+    limit: int,
+    cursor: str | None = None,
+):
+    from app.core.pagination import paginate_by_id
+
+    stmt = select(Simulation).where(Simulation.project_id == project_id)
+    return await paginate_by_id(session, stmt, id_column=Simulation.id, limit=limit, cursor=cursor)

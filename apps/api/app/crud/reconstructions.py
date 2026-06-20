@@ -16,7 +16,14 @@ async def create_reconstruction(session: AsyncSession, project_id: str, rebuilt_
     return r
 
 
-async def get_reconstructions_for_project(session: AsyncSession, project_id: str):
-    q = select(Reconstruction).where(Reconstruction.project_id == project_id)
-    res = await session.execute(q)
-    return res.scalars().all()
+async def list_reconstructions_for_project(
+    session: AsyncSession,
+    project_id: str,
+    *,
+    limit: int,
+    cursor: str | None = None,
+):
+    from app.core.pagination import paginate_by_id
+
+    stmt = select(Reconstruction).where(Reconstruction.project_id == project_id)
+    return await paginate_by_id(session, stmt, id_column=Reconstruction.id, limit=limit, cursor=cursor)
