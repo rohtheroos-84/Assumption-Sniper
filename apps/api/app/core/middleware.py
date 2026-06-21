@@ -70,6 +70,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             if run_count > self.settings.run_creation_per_hour:
                 return PlainTextResponse("run creation rate limit exceeded", status_code=429)
 
+            burst_key = f"rate:run_burst:{identifier}:{int(time.time() // 60)}"
+            burst_count = await r.incr(burst_key)
+            if burst_count == 1:
+                await r.expire(burst_key, 60)
+            if burst_count > self.settings.run_burst_per_minute:
+                return PlainTextResponse("run creation burst limit exceeded", status_code=429)
+
         # read endpoints
         if method == "GET":
             read_key = f"rate:read:{identifier}:{int(time.time() // 60)}"
