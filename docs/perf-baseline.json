@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-06-20T15:07:08.015118+00:00",
+  "concurrency": 5,
+  "requests_per_endpoint": 20,
+  "endpoints": {
+    "/api/v1/ping": {
+      "count": 20,
+      "mean_ms": 6.07,
+      "p50_ms": 5.75,
+      "p95_ms": 9.77,
+      "p99_ms": 13.75,
+      "max_ms": 13.75
+    },
+    "/api/v1/health": {
+      "count": 20,
+      "mean_ms": 3.29,
+      "p50_ms": 3.41,
+      "p95_ms": 4.63,
+      "p99_ms": 4.78,
+      "max_ms": 4.78
+    }
+  }
+}

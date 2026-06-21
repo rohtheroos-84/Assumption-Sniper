@@ -164,14 +164,14 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] add regression tests for prompt changes
 
 ## phase 12: performance and reliability
-- [ ] add request batching where safe
-- [ ] add queue backpressure and retries
-- [ ] add cache warming for common prompts
-- [ ] add pagination for large result sets
-- [ ] add timeouts and circuit breakers for ai calls
-- [ ] run load tests and record p95 latencies
-- [ ] optimize slow queries and add indexes
-- [ ] verify streaming performance under load
+- [x] add request batching where safe
+- [x] add queue backpressure and retries
+- [x] add cache warming for common prompts
+- [x] add pagination for large result sets
+- [x] add timeouts and circuit breakers for ai calls
+- [x] run load tests and record p95 latencies
+- [x] optimize slow queries and add indexes
+- [x] verify streaming performance under load
 
 ## phase 13: security and compliance
 - [ ] add input sanitization and prompt injection checks
