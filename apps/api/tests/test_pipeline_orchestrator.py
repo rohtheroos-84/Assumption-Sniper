@@ -134,7 +134,7 @@ async def test_pipeline_marks_failed_on_stage_error(monkeypatch, pipeline_env):
 
     async def failing_run(req: AIRequest):
         call_count["n"] += 1
-        if call_count["n"] == 4:
+        if req.task == AITask.simulation:
             raise RuntimeError("simulation model timeout")
         pipeline_env["run_calls"].append(req.task)
         from app.ai.schemas import AIResult, PromptMetadata

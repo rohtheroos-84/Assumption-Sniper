@@ -23,7 +23,7 @@ class DummyRedis:
         return None
 
     async def set(self, *args, **kwargs):
-        return None
+        return True
 
     async def ping(self):
         return True
@@ -33,6 +33,41 @@ class DummyRedis:
 
     async def expire(self, *args, **kwargs):
         return True
+
+    async def delete(self, *args, **kwargs):
+        return 1
+
+    async def llen(self, *args, **kwargs):
+        return 0
+
+    async def rpush(self, *args, **kwargs):
+        return 1
+
+    async def lpop(self, *args, **kwargs):
+        return None
+
+    async def decr(self, *args, **kwargs):
+        return 0
+
+    async def publish(self, *args, **kwargs):
+        return 1
+
+    def pubsub(self):
+        return DummyPubSub()
+
+
+class DummyPubSub:
+    async def subscribe(self, *args, **kwargs):
+        return None
+
+    async def unsubscribe(self, *args, **kwargs):
+        return None
+
+    async def close(self):
+        return None
+
+    async def get_message(self, *args, **kwargs):
+        return None
 
 
 class NoopSession:

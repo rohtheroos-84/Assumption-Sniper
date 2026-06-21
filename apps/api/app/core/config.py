@@ -33,6 +33,20 @@ class Settings(BaseSettings):
     run_creation_per_hour: int = Field(10, ge=1)
     read_requests_per_minute: int = Field(60, ge=1)
     ip_requests_per_minute: int = Field(120, ge=1)
+    run_burst_per_minute: int = Field(5, ge=1)
+    max_concurrent_runs_per_user: int = Field(2, ge=1)
+    max_queue_depth: int = Field(50, ge=1)
+    queue_task_max_retries: int = Field(2, ge=0, le=5)
+    default_page_size: int = Field(50, ge=1, le=200)
+    max_page_size: int = Field(200, ge=1, le=500)
+    ai_cache_ttl_seconds: int = Field(60 * 60 * 24 * 7, ge=60)
+    ai_batch_size: int = Field(8, ge=1, le=32)
+    openrouter_circuit_failure_threshold: int = Field(5, ge=1)
+    openrouter_circuit_cooldown_seconds: int = Field(60, ge=5)
+    sse_poll_interval_seconds: float = Field(1.0, ge=0.1, le=10.0)
+    sse_use_redis_pubsub: bool = True
+    db_pool_size: int = Field(5, ge=1, le=50)
+    db_max_overflow: int = Field(10, ge=0, le=100)
 
     model_config = SettingsConfigDict(
         env_file=".env",
