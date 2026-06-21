@@ -7,8 +7,10 @@ from typing import Any, Optional
 
 import httpx
 
+from app.ai.circuit_breaker import assert_circuit_closed, record_failure, record_success
 from app.ai.prompts import PROMPT_VERSION
 from app.core.config import get_settings
+from app.db import get_redis
 
 settings = get_settings()
 
@@ -40,6 +42,9 @@ class OpenRouterClient:
         seed: Optional[int] = None,
         response_format: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
+        redis = get_redis()
+        await assert_circuit_closed(redis)
+
         payload: dict[str, Any] = {
             "model": model,
             "messages": [
@@ -59,9 +64,11 @@ class OpenRouterClient:
             try:
                 response = await self._client.post("/chat/completions", json=payload)
                 response.raise_for_status()
+                await record_success(redis)
                 return response.json()
             except Exception as exc:
                 last_error = exc
+                await record_failure(redis)
                 if attempt >= self.settings.openrouter_max_retries:
                     raise
                 await asyncio.sleep(0.5 * (attempt + 1))

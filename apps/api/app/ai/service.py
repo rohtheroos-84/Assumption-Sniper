@@ -209,7 +209,7 @@ class AIService:
             "usage": usage,
             "warnings": warnings,
         }
-        await self.redis.set(cache_key, json.dumps(payload), ex=60 * 60 * 24 * 7)
+        await self.redis.set(cache_key, json.dumps(payload), ex=settings.ai_cache_ttl_seconds)
 
         if req.run_id:
             cost_per_token = MODEL_PRICING.get(model, Decimal("0.001"))

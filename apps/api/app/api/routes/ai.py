@@ -4,6 +4,8 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 
 from app.ai.schemas import AIRequest, DebateRequest
 from app.ai.service import build_ai_service
+from app.ai.batching import chunk_items
+from app.core.config import get_settings
 from app.crud.decomposition import create_decomposition
 from app.db import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +26,32 @@ from app.ai.schemas_runtime import ReconstructionOutput, DebateOutput
 
 router = APIRouter()
 service = build_ai_service()
+settings = get_settings()
+
+
+async def _classify_missing_categories(items: list[dict], *, project_id: str, run_id: str | None) -> None:
+    texts = [it["assumption_text"] for it in items if not it.get("category")]
+    if not texts:
+        return
+    mapping: dict[str, str] = {}
+    for batch in chunk_items(texts, settings.ai_batch_size):
+        classify_req = AIRequest(
+            task=AITask.assumption_classification,
+            input_text=json.dumps(batch),
+            project_id=project_id,
+            run_id=run_id,
+            dry_run=False,
+        )
+        cr = await service.run(classify_req)
+        try:
+            co = ClassificationOutput.model_validate(cr.parsed_output)
+            for c in co.classifications:
+                mapping[c.assumption_text] = c.category
+        except Exception:
+            continue
+    for it in items:
+        if not it.get("category"):
+            it["category"] = mapping.get(it["assumption_text"], "other")
 
 
 @router.post("/ai/preview")
@@ -94,22 +122,10 @@ async def extract_assumptions(
         # items list of dicts
         items = [item.model_dump() for item in ao.assumptions]
 
-        # if any item missing category, call classifier
+        # if any item missing category, classify in safe batches
         missing = [it for it in items if not it.get("category")]
         if missing:
-            # build classification input as json array of strings
-            texts = [it["assumption_text"] for it in items]
-            classify_req = AIRequest(task=AITask.assumption_classification, input_text=json.dumps(texts), project_id=req.project_id, run_id=req.run_id, dry_run=False)
-            cr = await service.run(classify_req)
-            try:
-                co = ClassificationOutput.model_validate(cr.parsed_output)
-                mapping = {c.assumption_text: c.category for c in co.classifications}
-                for it in items:
-                    if not it.get("category"):
-                        it["category"] = mapping.get(it["assumption_text"], "other")
-            except Exception:
-                # ignore classification failures
-                pass
+            await _classify_missing_categories(items, project_id=req.project_id, run_id=req.run_id)
 
         # persist
         async with AsyncSessionLocal() as s:
