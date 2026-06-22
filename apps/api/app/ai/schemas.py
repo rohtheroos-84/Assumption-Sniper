@@ -3,7 +3,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from app.core.safety import sanitize_text
 
 
 class AITask(str, Enum):
@@ -33,6 +35,11 @@ class AIRequest(BaseModel):
     dry_run: bool = True
     max_depth: int = Field(default=3, ge=1, le=8)
 
+    @field_validator("input_text")
+    @classmethod
+    def sanitize_input(cls, value: str) -> str:
+        return sanitize_text(value)
+
 
 class DebateRequest(BaseModel):
     input_text: str = Field(min_length=1)
@@ -43,6 +50,11 @@ class DebateRequest(BaseModel):
     persona_keys: list[str] = Field(default_factory=list)
     timeout_seconds: float = Field(default=12.0, ge=1.0, le=60.0)
     max_agents: int = Field(default=3, ge=1, le=8)
+
+    @field_validator("input_text")
+    @classmethod
+    def sanitize_input(cls, value: str) -> str:
+        return sanitize_text(value)
 
 
 class PromptMetadata(BaseModel):

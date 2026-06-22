@@ -32,6 +32,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
+    deletion_requested_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -179,9 +180,11 @@ class APIKey(Base):
 
     id = Column(String, primary_key=True, default=gen_uuid)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
-    key = Column(String, unique=True, index=True, nullable=False)
+    key_hash = Column(String, unique=True, index=True, nullable=False)
+    key_prefix = Column(String, nullable=False)
     label = Column(String, nullable=True)
     revoked = Column(Boolean, nullable=False, default=False)
+    rotated_from_id = Column(String, ForeignKey("api_keys.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

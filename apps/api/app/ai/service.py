@@ -28,6 +28,8 @@ from app.ai.schemas_runtime import (
 from app.crud.core import record_run_event, record_run_usage
 from app.db import AsyncSessionLocal
 from app.core.config import get_settings
+from app.core.output_filter import filter_output_text, filter_parsed_output
+from app.core.safety import scan_prompt_injection
 from app.db import get_redis
 
 settings = get_settings()
@@ -59,11 +61,7 @@ TASK_MODELS: dict[str, tuple[ModelRole, Type[BaseModel]]] = {
     "reconstruction": (ModelRole.reconstruction, ReconstructionOutput),
 }
 
-SAFE_PATTERNS = [
-    re.compile(r"ignore\s+previous\s+instructions", re.I),
-    re.compile(r"system\s*prompt", re.I),
-    re.compile(r"<\s*script", re.I),
-]
+SAFE_PATTERNS = []  # kept for backward-compatible tests; use scan_prompt_injection instead
 
 MODEL_PRICING = {
     settings.openrouter_fast_model: Decimal("0.0005"),
@@ -93,12 +91,7 @@ class AIService:
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
 
     def _safety_scan(self, text: str) -> list[str]:
-        warnings: list[str] = []
-        lowered = text.lower()
-        for pattern in SAFE_PATTERNS:
-            if pattern.search(lowered):
-                warnings.append(f"blocked pattern: {pattern.pattern}")
-        return warnings
+        return scan_prompt_injection(text)
 
     def _render_prompt(self, req: AIRequest) -> tuple[ModelRole, str, str, RouteConfig]:
         role, _ = TASK_MODELS[req.task.value]
@@ -180,10 +173,14 @@ class AIService:
         )
         raw_output = self.client.extract_text(result)
         usage = self.client.extract_usage(result)
+        raw_output, output_warnings = filter_output_text(raw_output)
+        warnings.extend(output_warnings)
 
         try:
             validated = self._repair_with_schema(raw_output, schema)
             parsed_output = validated.parsed
+            parsed_output, parsed_warnings = filter_parsed_output(parsed_output)
+            warnings.extend(parsed_warnings)
             if validated.repaired:
                 warnings.append("response_required_json_repair")
         except Exception:
@@ -197,8 +194,12 @@ class AIService:
             )
             raw_output = self.client.extract_text(fallback_result)
             usage = self.client.extract_usage(fallback_result)
+            raw_output, output_warnings = filter_output_text(raw_output)
+            warnings.extend(output_warnings)
             validated = self._repair_with_schema(raw_output, schema)
             parsed_output = validated.parsed
+            parsed_output, parsed_warnings = filter_parsed_output(parsed_output)
+            warnings.extend(parsed_warnings)
             warnings.append("used_fallback_model")
             if validated.repaired:
                 warnings.append("response_required_json_repair")
@@ -240,6 +241,18 @@ class AIService:
         return AIResult(task=req.task, metadata=metadata, raw_output=raw_output, parsed_output=parsed_output, usage=usage, warnings=warnings)
 
     async def debate(self, req: DebateRequest) -> DebateOutput:
+        warnings = self._safety_scan(req.input_text)
+        if warnings:
+            metadata = PromptMetadata(
+                prompt_version=PROMPT_VERSION,
+                experiment_id="blocked",
+                model=settings.openrouter_fast_model,
+                fallback_model=None,
+                cached=False,
+                safety_blocked=True,
+            )
+            return DebateOutput(metadata=metadata, agents=[], merged=[])
+
         selected_keys = req.persona_keys or DEFAULT_DEBATE_PERSONAS
         personas = [DEBATE_PERSONAS[key] for key in selected_keys if key in DEBATE_PERSONAS][: req.max_agents]
         if not personas:
