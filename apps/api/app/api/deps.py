@@ -8,14 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import decode_access_token
 from app.db import get_session
 from app.crud import auth as auth_crud
+from app.models import User
 
 
 async def get_current_user(
     authorization: Optional[str] = Header(None),
     x_api_key: Optional[str] = Header(None),
     session: AsyncSession = Depends(get_session),
-):
-    # API key header has precedence
+) -> User:
     if x_api_key:
         api = await auth_crud.get_api_key_by_value(session, x_api_key)
         if api and not api.revoked:
@@ -38,3 +38,9 @@ async def get_current_user(
                 return user
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+
+async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account inactive or pending deletion")
+    return current_user

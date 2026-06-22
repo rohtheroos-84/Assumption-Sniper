@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 
 from app.ai.schemas import AIRequest, DebateRequest
 from app.ai.service import build_ai_service
+from app.api.deps import get_current_active_user
+from app.models import User
 from app.ai.batching import chunk_items
 from app.core.config import get_settings
 from app.crud.decomposition import create_decomposition
@@ -55,7 +57,7 @@ async def _classify_missing_categories(items: list[dict], *, project_id: str, ru
 
 
 @router.post("/ai/preview")
-async def ai_preview(request: AIRequest):
+async def ai_preview(request: AIRequest, current_user: User = Depends(get_current_active_user)):
     if request.dry_run:
         return {
             "task": request.task,
@@ -73,7 +75,9 @@ async def ai_preview(request: AIRequest):
 
 @router.post("/decompose")
 async def decompose(
-    request: AIRequest, session: AsyncSession = Depends(get_session)
+    request: AIRequest,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user),
 ):
     if request.task != request.task.__class__.decomposition:
         # normalize to decomposition task
@@ -101,6 +105,7 @@ async def extract_assumptions(
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     background: bool = False,
+    current_user: User = Depends(get_current_active_user),
 ):
     if request.task != request.task.__class__.assumptions:
         request.task = request.task.__class__.assumptions
@@ -211,6 +216,7 @@ async def generate_critiques(
 async def debate_review(
     request: DebateRequest,
     session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user),
 ):
     try:
         result = await service.debate(request)
@@ -226,6 +232,7 @@ async def generate_simulations(
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     background: bool = False,
+    current_user: User = Depends(get_current_active_user),
 ):
     if request.task != request.task.__class__.simulation:
         request.task = request.task.__class__.simulation
@@ -271,6 +278,7 @@ async def generate_reconstruction(
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     background: bool = False,
+    current_user: User = Depends(get_current_active_user),
 ):
     if request.task != request.task.__class__.reconstruction:
         request.task = request.task.__class__.reconstruction
@@ -310,6 +318,7 @@ async def compute_scores(
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     background: bool = False,
+    current_user: User = Depends(get_current_active_user),
 ):
     if not request.project_id:
         raise HTTPException(status_code=400, detail="project_id required")
