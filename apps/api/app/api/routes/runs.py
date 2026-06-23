@@ -4,13 +4,15 @@ import asyncio
 import json
 from typing import Any, AsyncGenerator
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_active_user
+from app.api.request_context import audit_context
+from app.crud import audit as audit_crud
 from app.core.config import get_settings
 from app.core.pagination import clamp_limit, serialize_page
 from app.core.queue import QueueTask, complete_pipeline_task, try_enqueue_pipeline
@@ -61,12 +63,23 @@ async def _run_pipeline_task(run_id: str, project_id: str, user_id: str | None) 
 @router.post("/runs")
 async def create_run_endpoint(
     request: CreateRunRequest,
+    http_request: Request,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
 ):
     input_text = request.input_text or request.title
     project = await create_project(session, current_user.id, request.title, input_text)
     run = await create_run(session, project.id)
+    ctx = audit_context(http_request)
+    await audit_crud.record_audit(
+        session,
+        actor_id=current_user.id,
+        action="run.create",
+        resource_type="run",
+        resource_id=run.id,
+        meta={"project_id": project.id},
+        **ctx,
+    )
     return {
         "id": run.id,
         "run_id": run.id,
@@ -79,7 +92,7 @@ async def create_run_endpoint(
 @router.get("/runs")
 async def list_runs(
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
     limit: int | None = Query(default=None),
     cursor: str | None = Query(default=None),
 ):
@@ -102,7 +115,7 @@ async def list_runs(
 async def get_run(
     run_id: str,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
 ):
     run, project = await _require_run_access(session, run_id, current_user.id)
     return {
@@ -128,7 +141,7 @@ async def get_run(
 async def list_run_assumptions(
     run_id: str,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
     limit: int | None = Query(default=None),
     cursor: str | None = Query(default=None),
 ):
@@ -151,7 +164,7 @@ async def list_run_assumptions(
 async def list_run_critiques(
     run_id: str,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
     limit: int | None = Query(default=None),
     cursor: str | None = Query(default=None),
 ):
@@ -175,7 +188,7 @@ async def list_run_critiques(
 async def list_run_simulations(
     run_id: str,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
     limit: int | None = Query(default=None),
     cursor: str | None = Query(default=None),
 ):
@@ -199,7 +212,7 @@ async def list_run_simulations(
 async def list_run_reconstructions(
     run_id: str,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
     limit: int | None = Query(default=None),
     cursor: str | None = Query(default=None),
 ):
@@ -222,7 +235,7 @@ async def list_run_reconstructions(
 async def list_run_scores(
     run_id: str,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
     limit: int | None = Query(default=None),
     cursor: str | None = Query(default=None),
 ):
@@ -245,10 +258,11 @@ async def list_run_scores(
 async def start_run(
     run_id: str,
     background_tasks: BackgroundTasks,
+    http_request: Request,
     project_id: str | None = None,
     background: bool = True,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
 ):
     if not run_id or run_id == "new":
         if not project_id:
@@ -274,6 +288,17 @@ async def start_run(
     if not ok:
         raise HTTPException(status_code=429, detail=reason or "queue unavailable")
 
+    ctx = audit_context(http_request)
+    await audit_crud.record_audit(
+        session,
+        actor_id=current_user.id,
+        action="run.start",
+        resource_type="run",
+        resource_id=run_id,
+        meta={"project_id": project_id},
+        **ctx,
+    )
+
     if background:
         background_tasks.add_task(_run_pipeline_task, run_id, project_id, current_user.id)
         return {"run_id": run_id, "status": "queued"}
@@ -285,12 +310,22 @@ async def start_run(
 @router.post("/runs/{run_id}/cancel")
 async def cancel_run(
     run_id: str,
+    http_request: Request,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
 ):
     await _require_run_access(session, run_id, current_user.id)
     await update_run_status(session, run_id, "cancelled")
     await record_run_event(session, run_id, stage="orchestration", event_type="cancel_requested", payload_json={})
+    ctx = audit_context(http_request)
+    await audit_crud.record_audit(
+        session,
+        actor_id=current_user.id,
+        action="run.cancel",
+        resource_type="run",
+        resource_id=run_id,
+        **ctx,
+    )
     return {"run_id": run_id, "status": "cancelled"}
 
 
@@ -300,7 +335,7 @@ async def retry_run(
     background_tasks: BackgroundTasks,
     background: bool = True,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
 ):
     run, _project = await _require_run_access(session, run_id, current_user.id)
     await update_run_status(session, run_id, "queued")
@@ -385,7 +420,7 @@ async def event_stream(run_id: str) -> AsyncGenerator[str, None]:
 async def run_events(
     run_id: str,
     session: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_active_user),
 ):
     await _require_run_access(session, run_id, current_user.id)
     return StreamingResponse(event_stream(run_id), media_type="text/event-stream")

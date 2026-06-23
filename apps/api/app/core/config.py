@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     sse_use_redis_pubsub: bool = True
     db_pool_size: int = Field(5, ge=1, le=50)
     db_max_overflow: int = Field(10, ge=0, le=100)
+    max_input_text_length: int = Field(50000, ge=256, le=200000)
+    data_retention_days_raw: int = Field(30, ge=1)
+    data_retention_days_summaries: int = Field(365, ge=1)
+    data_retention_days_metrics: int = Field(730, ge=1)
+    account_deletion_grace_days: int = Field(7, ge=1)
 
     model_config = SettingsConfigDict(
         env_file=".env",
