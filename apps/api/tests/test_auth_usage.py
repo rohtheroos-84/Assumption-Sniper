@@ -24,7 +24,7 @@ async def test_register_login_and_usage_flow(monkeypatch):
         return users.get(email)
 
     async def fake_create_user(session, email, password):
-        user = SimpleNamespace(id="user-1", email=email, hashed_password="hashed")
+        user = SimpleNamespace(id="user-1", email=email, hashed_password="hashed", is_active=True)
         users[email] = user
         return user
 
@@ -34,10 +34,17 @@ async def test_register_login_and_usage_flow(monkeypatch):
                 return user
         return None
 
-    async def fake_create_api_key(session, user_id, key, label=None):
-        record = SimpleNamespace(key=key, label=label, user_id=user_id, revoked=False)
+    async def fake_create_api_key(session, user_id, label=None, rotated_from_id=None):
+        key = "test-api-key-value"
+        record = SimpleNamespace(
+            id="key-1",
+            key_prefix=key[:8],
+            label=label,
+            user_id=user_id,
+            revoked=False,
+        )
         api_keys[key] = record
-        return record
+        return record, key
 
     async def fake_get_api_key_by_value(session, key):
         return api_keys.get(key)
@@ -52,6 +59,11 @@ async def test_register_login_and_usage_flow(monkeypatch):
     async def fake_execute(self, *args, **kwargs):
         return FakeResult()
 
+    async def fake_record_audit(session, **kwargs):
+        return SimpleNamespace(id="audit-1")
+
+    monkeypatch.setattr("app.api.routes.auth.audit_crud.record_audit", fake_record_audit)
+    monkeypatch.setattr("app.crud.audit.record_audit", fake_record_audit)
     monkeypatch.setattr("app.crud.auth.get_user_by_email", fake_get_user_by_email)
     monkeypatch.setattr("app.crud.auth.create_user", fake_create_user)
     monkeypatch.setattr("app.crud.auth.get_user_by_id", fake_get_user_by_id)
@@ -70,10 +82,11 @@ async def test_register_login_and_usage_flow(monkeypatch):
             token = data["access_token"]
 
             headers = {"Authorization": f"Bearer {token}"}
-            r2 = await ac.post("/api/v1/auth/apikey", headers=headers, json={"label": "devkey"})
+            r2 = await ac.post("/api/v1/auth/apikey", headers=headers, params={"label": "devkey"})
             assert r2.status_code == 200
             key_data = r2.json()
             assert "key" in key_data
+            assert "key_prefix" in key_data
             api_key = key_data["key"]
 
             r3 = await ac.get("/api/v1/auth/usage", headers=headers)

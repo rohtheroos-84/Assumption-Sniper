@@ -27,6 +27,15 @@ def contract_client(monkeypatch):
     app.dependency_overrides[get_session] = _override_get_session
     monkeypatch.setattr("app.db.get_redis", lambda: DummyRedis())
 
+    fake_user = SimpleNamespace(id="user-contract", email="test@example.com", is_active=True)
+
+    from app.api.deps import get_current_active_user
+
+    async def fake_current_user():
+        return fake_user
+
+    app.dependency_overrides[get_current_active_user] = fake_current_user
+
     async def fake_create_run(session, project_id):
         return SimpleNamespace(id="run-contract-1")
 
