@@ -174,15 +174,15 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] verify streaming performance under load
 
 ## phase 13: security and compliance
-- [ ] add input sanitization and prompt injection checks
-- [ ] add output filtering for unsafe content
-- [ ] add secret management and key rotation
-- [ ] add audit logs for sensitive actions
-- [ ] add data retention and delete workflows
-- [ ] add rate limiting per user and ip
-- [ ] run dependency and container scans
-- [ ] review permissions for least privilege
-
+- [x] add input sanitization and prompt injection checks
+- [x] add output filtering for unsafe content
+- [x] add secret management and key rotation
+- [x] add audit logs for sensitive actions
+- [x] add data retention and delete workflows
+- [x] add rate limiting per user and ip
+- [x] run dependency and container scans
+- [x] review permissions for least privilege
+ 
 ## phase 14: observability and ops
 - [ ] add structured logs with correlation ids
 - [ ] add metrics for latency, cost, and error rates
