@@ -52,6 +52,14 @@ class Settings(BaseSettings):
     data_retention_days_summaries: int = Field(365, ge=1)
     data_retention_days_metrics: int = Field(730, ge=1)
     account_deletion_grace_days: int = Field(7, ge=1)
+    # observability
+    metrics_enabled: bool = True
+    tracing_enabled: bool = True
+    trace_ttl_seconds: int = Field(86400, ge=60)
+    slo_api_latency_p95_ms: float = Field(500.0, ge=1)
+    slo_error_rate_percent: float = Field(1.0, ge=0.01, le=100.0)
+    slo_pipeline_success_percent: float = Field(95.0, ge=1, le=100.0)
+    budget_alert_usd_per_hour: float = Field(10.0, ge=0.01)
 
     model_config = SettingsConfigDict(
         env_file=".env",
