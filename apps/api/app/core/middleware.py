@@ -78,6 +78,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         method = request.method.upper()
 
+        if path in {"/api/v1/metrics", "/api/v1/ping", "/api/v1/health", "/api/v1/ready"}:
+            return await call_next(request)
+
         if method == "POST" and path.startswith("/api/v1/runs"):
             run_key = f"rate:run:{user_subject}:{int(time.time() // 3600)}"
             run_count = await r.incr(run_key)
