@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import json
 import re
+import time
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Type
@@ -28,6 +29,7 @@ from app.ai.schemas_runtime import (
 from app.crud.core import record_run_event, record_run_usage
 from app.db import AsyncSessionLocal
 from app.core.config import get_settings
+from app.core.metrics import record_ai_request, record_error
 from app.core.output_filter import filter_output_text, filter_parsed_output
 from app.core.safety import scan_prompt_injection
 from app.db import get_redis
@@ -132,6 +134,31 @@ class AIService:
             return ValidationRepairResult(parsed=parsed, repaired=True, warnings=["repaired_json"])
 
     async def run(self, req: AIRequest) -> AIResult:
+        start = time.perf_counter()
+        result_status = "ok"
+        try:
+            result = await self._run_impl(req)
+            if result.metadata.safety_blocked:
+                result_status = "blocked"
+            return result
+        except Exception:
+            result_status = "error"
+            record_error("ai", req.task.value)
+            raise
+        finally:
+            record_ai_request(
+                req.task.value,
+                status=result_status,
+                duration_seconds=time.perf_counter() - start,
+                model=getattr(self, "_last_model", "unknown"),
+                cost_usd=getattr(self, "_last_cost_usd", 0.0),
+                tokens=getattr(self, "_last_tokens", 0),
+            )
+
+    async def _run_impl(self, req: AIRequest) -> AIResult:
+        self._last_model = settings.openrouter_fast_model
+        self._last_cost_usd = 0.0
+        self._last_tokens = 0
         warnings = self._safety_scan(req.input_text)
         role, system, user, route = self._render_prompt(req)
         _, schema = TASK_MODELS[req.task.value]
@@ -149,12 +176,15 @@ class AIService:
         )
 
         if warnings:
+            self._last_model = model
             return AIResult(task=req.task, metadata=metadata, parsed_output={}, warnings=warnings)
 
         cached = await self.redis.get(cache_key)
         if cached:
             payload = json.loads(cached)
             metadata.cached = True
+            usage = payload.get("usage", {})
+            self._set_usage_metrics(model, usage)
             return AIResult(
                 task=req.task,
                 metadata=metadata,
@@ -238,7 +268,15 @@ class AIService:
                         "warnings": warnings,
                     },
                 )
+        self._set_usage_metrics(model, usage)
         return AIResult(task=req.task, metadata=metadata, raw_output=raw_output, parsed_output=parsed_output, usage=usage, warnings=warnings)
+
+    def _set_usage_metrics(self, model: str, usage: dict[str, Any]) -> None:
+        self._last_model = model
+        token_total = int(usage.get("total_tokens") or 0)
+        self._last_tokens = token_total
+        cost_per_token = MODEL_PRICING.get(model, Decimal("0.001"))
+        self._last_cost_usd = float(cost_per_token * Decimal(token_total))
 
     async def debate(self, req: DebateRequest) -> DebateOutput:
         warnings = self._safety_scan(req.input_text)
