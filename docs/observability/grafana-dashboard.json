@@ -1,0 +1,58 @@
+{
+  "title": "Assumption Sniper Ops",
+  "uid": "assumption-sniper-ops",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP Request Rate",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [{"expr": "sum(rate(http_requests_total[5m])) by (status)", "legendFormat": "{{status}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP p95 Latency (s)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "AI Cost USD / min",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [{"expr": "sum(rate(ai_cost_usd_total[5m])) by (task)", "legendFormat": "{{task}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "AI Error Rate",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [{"expr": "sum(rate(ai_requests_total{status=\"error\"}[5m]))", "legendFormat": "errors"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Pipeline Stage p95 (s)",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(pipeline_stage_duration_seconds_bucket[5m])) by (le, stage))", "legendFormat": "{{stage}}"}]
+    },
+    {
+      "type": "stat",
+      "title": "Hourly Budget Burn (USD)",
+      "gridPos": {"h": 4, "w": 8, "x": 0, "y": 24},
+      "targets": [{"expr": "increase(budget_usd_hourly_total{window=\"current_hour\"}[1h])", "legendFormat": "usd"}]
+    },
+    {
+      "type": "stat",
+      "title": "5xx Error Rate %",
+      "gridPos": {"h": 4, "w": 8, "x": 8, "y": 24},
+      "targets": [{"expr": "100 * sum(rate(http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 0.001)", "legendFormat": "pct"}]
+    },
+    {
+      "type": "stat",
+      "title": "Pipeline Errors (10m)",
+      "gridPos": {"h": 4, "w": 8, "x": 16, "y": 24},
+      "targets": [{"expr": "increase(errors_total{component=\"pipeline\"}[10m])", "legendFormat": "errors"}]
+    }
+  ]
+}

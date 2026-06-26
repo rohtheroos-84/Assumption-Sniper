@@ -1,0 +1,55 @@
+# Prometheus alert rules for Assumption Sniper
+
+groups:
+  - name: assumption_sniper_slo
+    rules:
+      - alert: HighApiErrorRate
+        expr: |
+          100 * sum(rate(http_requests_total{status=~"5.."}[5m]))
+          / clamp_min(sum(rate(http_requests_total[5m])), 0.001) > 1
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: API 5xx error rate above 1%
+          description: Investigate recent deploys, database connectivity, and OpenRouter outages.
+
+      - alert: HighApiLatencyP95
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))
+          > 0.5
+        for: 15m
+        labels:
+          severity: ticket
+        annotations:
+          summary: API p95 latency above 500ms
+          description: Check slow queries, queue depth, and AI provider latency.
+
+      - alert: PipelineStageFailures
+        expr: increase(errors_total{component="pipeline"}[10m]) > 5
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: Pipeline stage failures spiking
+          description: Review run traces via GET /api/v1/ops/traces/{run_id}.
+
+      - alert: BudgetBurnHigh
+        expr: increase(budget_usd_hourly_total{window="current_hour"}[1h]) > 10
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: Hourly AI spend exceeded budget threshold
+          description: Enable cost guard flags, review concurrent runs, and inspect top users.
+
+      - alert: AiErrorSpike
+        expr: |
+          100 * sum(rate(ai_requests_total{status="error"}[5m]))
+          / clamp_min(sum(rate(ai_requests_total[5m])), 0.001) > 2
+        for: 10m
+        labels:
+          severity: ticket
+        annotations:
+          summary: AI task error rate above 2%
+          description: Check OpenRouter circuit breaker state and prompt/schema regressions.
