@@ -159,6 +159,7 @@ async def test_circuit_breaker_recovers_after_success():
 
 @pytest.mark.asyncio
 async def test_orchestrator_retries_transient_stage_error(monkeypatch):
+    monkeypatch.setattr("app.core.tracing.settings.tracing_enabled", False)
     events: list[str] = []
     attempts = {"n": 0}
 

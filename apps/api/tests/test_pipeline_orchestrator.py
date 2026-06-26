@@ -33,6 +33,7 @@ class MockSession:
 
 @pytest.fixture
 def pipeline_env(monkeypatch):
+    monkeypatch.setattr("app.core.tracing.settings.tracing_enabled", False)
     events: list[dict] = []
     statuses: list[str] = []
     run_calls: list[AITask] = []
