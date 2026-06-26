@@ -91,6 +91,7 @@ def mock_redis(monkeypatch):
     monkeypatch.setattr("app.db.get_redis", lambda: DummyRedis())
     monkeypatch.setattr("app.ai.service.get_redis", lambda: DummyRedis())
     monkeypatch.setattr("app.core.middleware.get_redis", lambda: DummyRedis())
+    monkeypatch.setattr("app.core.tracing.settings.tracing_enabled", False)
 
 
 @pytest.fixture
