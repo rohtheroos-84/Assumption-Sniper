@@ -1,0 +1,25 @@
+{
+  "team": "Assumption Sniper Platform",
+  "timezone": "UTC",
+  "rotation": [
+    {
+      "name": "primary",
+      "members": ["oncall-primary@example.com"],
+      "schedule": "weekly",
+      "handoff_day": "Monday",
+      "handoff_time": "09:00"
+    },
+    {
+      "name": "secondary",
+      "members": ["oncall-secondary@example.com"],
+      "schedule": "weekly",
+      "handoff_day": "Monday",
+      "handoff_time": "09:00"
+    }
+  ],
+  "channels": {
+    "slack": "#assumption-sniper-alerts",
+    "pagerduty_service": "assumption-sniper-production"
+  },
+  "notes": "Replace example emails with real on-call contacts before production launch."
+}
