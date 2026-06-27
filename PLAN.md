@@ -184,13 +184,13 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] review permissions for least privilege
  
 ## phase 14: observability and ops
-- [ ] add structured logs with correlation ids
-- [ ] add metrics for latency, cost, and error rates
-- [ ] add traces across pipeline stages
-- [ ] set up dashboards for kpis and slos
-- [ ] add alerting for error spikes and budget burn
-- [ ] create runbooks for common incidents
-- [ ] set up on-call rotation and escalation
+- [x] add structured logs with correlation ids
+- [x] add metrics for latency, cost, and error rates
+- [x] add traces across pipeline stages
+- [x] set up dashboards for kpis and slos
+- [x] add alerting for error spikes and budget burn
+- [x] create runbooks for common incidents
+- [x] set up on-call rotation and escalation
 
 ## phase 15: deployment and release
 - [ ] containerize frontend and backend
