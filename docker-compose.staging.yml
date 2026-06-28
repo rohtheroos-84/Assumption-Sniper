@@ -1,0 +1,27 @@
+# Staging overlay — use managed Postgres/Redis URLs from secrets manager
+services:
+  api:
+    image: ${API_IMAGE:-ghcr.io/example/assumption-sniper-api:staging}
+    env_file:
+      - deploy/env/staging.env
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+    labels:
+      - "deploy.slot=${DEPLOY_SLOT:-green}"
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/example/assumption-sniper-web:staging}
+    env_file:
+      - deploy/env/staging.env
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+    labels:
+      - "deploy.slot=${DEPLOY_SLOT:-green}"

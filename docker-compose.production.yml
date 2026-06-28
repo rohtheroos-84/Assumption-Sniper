@@ -1,0 +1,43 @@
+# Production overlay — blue/green slots; only one slot receives traffic at a time
+services:
+  api-blue:
+    profiles: ["blue"]
+    image: ${API_IMAGE:-ghcr.io/example/assumption-sniper-api:production}
+    env_file:
+      - deploy/env/production.env
+    environment:
+      DEPLOY_SLOT: blue
+    labels:
+      - "deploy.slot=blue"
+      - "deploy.traffic=${TRAFFIC_SLOT:-blue}"
+
+  api-green:
+    profiles: ["green"]
+    image: ${API_IMAGE:-ghcr.io/example/assumption-sniper-api:production}
+    env_file:
+      - deploy/env/production.env
+    environment:
+      DEPLOY_SLOT: green
+    labels:
+      - "deploy.slot=green"
+      - "deploy.traffic=${TRAFFIC_SLOT:-blue}"
+
+  web-blue:
+    profiles: ["blue"]
+    image: ${WEB_IMAGE:-ghcr.io/example/assumption-sniper-web:production}
+    env_file:
+      - deploy/env/production.env
+    environment:
+      DEPLOY_SLOT: blue
+    labels:
+      - "deploy.slot=blue"
+
+  web-green:
+    profiles: ["green"]
+    image: ${WEB_IMAGE:-ghcr.io/example/assumption-sniper-web:production}
+    env_file:
+      - deploy/env/production.env
+    environment:
+      DEPLOY_SLOT: green
+    labels:
+      - "deploy.slot=green"
