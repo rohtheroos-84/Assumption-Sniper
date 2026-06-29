@@ -1,0 +1,130 @@
+name: cd
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      canary_percent:
+        description: Canary traffic percent (production only)
+        required: false
+        default: "0"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  API_IMAGE: ghcr.io/${{ github.repository }}/api
+  WEB_IMAGE: ghcr.io/${{ github.repository }}/web
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/api
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:${{ github.sha }}
+            ${{ env.API_IMAGE }}:latest
+
+      - name: Build and push Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ vars.STAGING_API_URL || 'http://localhost:8000' }}
+            NEXT_PUBLIC_APP_ENV=staging
+          tags: |
+            ${{ env.WEB_IMAGE }}:${{ github.sha }}
+            ${{ env.WEB_IMAGE }}:latest
+
+  deploy-staging:
+    needs: build
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging')
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - run: pip install -r apps/api/requirements.txt httpx
+
+      - name: Run in-process smoke tests
+        run: python apps/api/scripts/smoke_test.py --in-process
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test
+          REDIS_URL: redis://localhost:6379/0
+          OPENROUTER_API_KEY: test-key
+          JWT_SECRET: cd-smoke-secret
+
+      - name: Staging deploy placeholder
+        run: |
+          echo "Images pushed:"
+          echo "  ${{ env.API_IMAGE }}:${{ github.sha }}"
+          echo "  ${{ env.WEB_IMAGE }}:${{ github.sha }}"
+          echo "Configure your orchestrator to pull these tags for staging."
+
+      - name: Remote staging smoke (optional)
+        if: vars.STAGING_API_URL != ''
+        run: python apps/api/scripts/smoke_test.py --url "${{ vars.STAGING_API_URL }}"
+        env:
+          STAGING_API_URL: ${{ vars.STAGING_API_URL }}
+
+  deploy-production:
+    needs: [build, deploy-staging]
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - run: pip install -r apps/api/requirements.txt httpx
+
+      - name: Production deploy (blue/green)
+        run: |
+          echo "Deploying production with canary ${{ inputs.canary_percent }}%"
+          echo "API: ${{ env.API_IMAGE }}:${{ github.sha }}"
+          echo "WEB: ${{ env.WEB_IMAGE }}:${{ github.sha }}"
+          echo "Run ./deploy/deploy.sh production ${{ inputs.canary_percent }} on your host"
+
+      - name: Remote production smoke (optional)
+        if: vars.PRODUCTION_API_URL != ''
+        run: python apps/api/scripts/smoke_test.py --url "${{ vars.PRODUCTION_API_URL }}"
+
+  tag-release:
+    needs: deploy-staging
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tag previous for rollback
+        run: echo "Tag ${{ github.sha }} as current; keep previous tag for rollback reference"
