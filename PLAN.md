@@ -193,15 +193,15 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] set up on-call rotation and escalation
 
 ## phase 15: deployment and release
-- [ ] containerize frontend and backend
-- [ ] set up managed database and redis
-- [ ] configure ci and cd with staged deploys
-- [ ] set up envs for dev, staging, and prod
-- [ ] add migration automation in deploy
-- [ ] add blue-green or canary strategy
-- [ ] verify rollback plan
-- [ ] run staging smoke tests
-- [ ] approve production launch checklist
+- [x] containerize frontend and backend
+- [x] set up managed database and redis
+- [x] configure ci and cd with staged deploys
+- [x] set up envs for dev, staging, and prod
+- [x] add migration automation in deploy
+- [x] add blue-green or canary strategy
+- [x] verify rollback plan
+- [x] run staging smoke tests
+- [x] approve production launch checklist
 
 ## phase 16: launch and iteration
 - [ ] publish landing page and demo flow
