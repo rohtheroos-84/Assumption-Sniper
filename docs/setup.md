@@ -34,4 +34,23 @@ python -m apps.api.scripts.init_db
 - test api: pytest -q apps/api
 
 ## environment
-copy .env.example to .env and fill values for local development.
+copy `.env.example` to `.env` and fill values for local development.
+
+## docker (full stack)
+
+```bash
+docker compose up --build
+```
+
+- API: http://localhost:8000
+- Web: http://localhost:3000
+- Postgres and Redis start automatically
+
+See `docs/deploy/infrastructure.md` for staging/production managed services.
+
+## deployment
+
+- Staging: merges to `main` trigger CD workflow (`.github/workflows/cd.yml`)
+- Production: manual `workflow_dispatch` with environment approval
+- Scripts: `deploy/deploy.sh`, `deploy/rollback.sh`
+- Smoke tests: `python apps/api/scripts/smoke_test.py --url http://localhost:8000`
