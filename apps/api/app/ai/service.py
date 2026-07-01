@@ -12,6 +12,7 @@ from typing import Any, Type
 from pydantic import BaseModel, ValidationError
 
 from app.ai.client import OpenRouterClient
+from app.ai.routing import resolve_model_for_role
 from app.ai.prompts import DEFAULT_DEBATE_PERSONAS, DEBATE_PERSONAS, PROMPT_VERSION, PROMPTS
 from app.ai.schemas import AIRequest, AIResult, AITask, DebateRequest, ModelRole, PromptMetadata
 from app.ai.schemas_runtime import (
@@ -98,7 +99,9 @@ class AIService:
     def _render_prompt(self, req: AIRequest) -> tuple[ModelRole, str, str, RouteConfig]:
         role, _ = TASK_MODELS[req.task.value]
         prompt = PROMPTS[req.task]
-        route = ROUTE_CONFIGS[role]
+        base_route = ROUTE_CONFIGS[role]
+        primary, fallback = resolve_model_for_role(role, settings.routing_profile)
+        route = RouteConfig(primary, fallback, base_route.temperature, base_route.max_tokens)
         system = prompt.system
         user = prompt.user.format(input_text=req.input_text, max_depth=req.max_depth)
         return role, system, user, route

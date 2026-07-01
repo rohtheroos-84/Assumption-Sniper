@@ -208,3 +208,42 @@ class Team(Base):
     name = Column(String, nullable=False)
     owner_id = Column(String, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class BetaInvite(Base):
+    __tablename__ = "beta_invites"
+
+    id = Column(String, primary_key=True, default=gen_uuid)
+    code = Column(String, unique=True, index=True, nullable=False)
+    cohort = Column(String, nullable=True)
+    max_uses = Column(Integer, nullable=False, default=1)
+    uses = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Feedback(Base):
+    __tablename__ = "feedback"
+    __table_args__ = (Index("ix_feedback_user_id_created_at", "user_id", "created_at"),)
+
+    id = Column(String, primary_key=True, default=gen_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True)
+    session_id = Column(String, nullable=True)
+    category = Column(String, nullable=False, default="general")
+    message = Column(Text, nullable=False)
+    page = Column(String, nullable=True)
+    rating = Column(Integer, nullable=True)
+    meta_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class AnalyticsEvent(Base):
+    __tablename__ = "analytics_events"
+    __table_args__ = (Index("ix_analytics_events_session_id", "session_id"),)
+
+    id = Column(String, primary_key=True, default=gen_uuid)
+    session_id = Column(String, nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True)
+    event_name = Column(String, nullable=False)
+    page = Column(String, nullable=True)
+    payload_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
