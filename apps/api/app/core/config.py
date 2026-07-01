@@ -60,6 +60,11 @@ class Settings(BaseSettings):
     slo_error_rate_percent: float = Field(1.0, ge=0.01, le=100.0)
     slo_pipeline_success_percent: float = Field(95.0, ge=1, le=100.0)
     budget_alert_usd_per_hour: float = Field(10.0, ge=0.01)
+    # launch / beta
+    beta_enabled: bool = False
+    beta_invite_codes: str = Field(default="founder-beta,pm-beta")
+    routing_profile: str = Field(default="balanced", pattern="^(cost|balanced|quality)$")
+    demo_rate_limit_per_minute: int = Field(20, ge=1)
 
     model_config = SettingsConfigDict(
         env_file=".env",

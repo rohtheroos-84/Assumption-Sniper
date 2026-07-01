@@ -44,3 +44,14 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     if not current_user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account inactive or pending deletion")
     return current_user
+
+
+async def get_optional_user(
+    authorization: Optional[str] = Header(None),
+    x_api_key: Optional[str] = Header(None),
+    session: AsyncSession = Depends(get_session),
+) -> Optional[User]:
+    try:
+        return await get_current_user(authorization=authorization, x_api_key=x_api_key, session=session)
+    except HTTPException:
+        return None

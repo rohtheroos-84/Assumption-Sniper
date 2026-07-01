@@ -78,7 +78,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         method = request.method.upper()
 
-        if path in {"/api/v1/metrics", "/api/v1/ping", "/api/v1/health", "/api/v1/ready"}:
+        if path in {"/api/v1/metrics", "/api/v1/ping", "/api/v1/health", "/api/v1/ready", "/api/v1/demo/sample", "/api/v1/demo/preview", "/api/v1/beta/status"}:
             return await call_next(request)
 
         if method == "POST" and path.startswith("/api/v1/runs"):
