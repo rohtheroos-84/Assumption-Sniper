@@ -6,9 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Assumption, AssumptionEdge, Critique, Score, Simulation
 
 
-def compute_risk_score(*, confidence: int, dep_count: int, max_impact: int) -> int:
-    """Higher risk when confidence is low, impact is high, and dependencies are numerous."""
-    return int(min(100, (100 - confidence) * (max_impact / 100) * (1 + dep_count / 5)))
+def compute_risk_score(*, confidence: int, dep_count: int, max_impact: int, avg_critique_severity: int = 0) -> int:
+    """Higher risk when confidence is low, impact is high, dependencies are numerous, and critiques are severe."""
+    severity_boost = 1.0 + (avg_critique_severity / 200.0)
+    return int(min(100, (100 - confidence) * (max_impact / 100) * (1 + dep_count / 5) * severity_boost))
 
 
 def max_simulation_impact_for_assumption(
@@ -64,10 +65,14 @@ async def compute_and_persist_scores(session: AsyncSession, project_id: str) -> 
         rd = await session.execute(qd)
         dep_count = int(rd.scalar() or 0)
 
-        # evidence strength = number of critiques
-        qc = select(func.count(Critique.id)).where(Critique.assumption_id == a.id)
+        # evidence strength = critique count weighted by average severity (eval-tuned)
+        qc = select(Critique).where(Critique.assumption_id == a.id)
         rc = await session.execute(qc)
-        critique_count = int(rc.scalar() or 0)
+        critiques = list(rc.scalars().all())
+        critique_count = len(critiques)
+        severities = [int(c.severity) for c in critiques if c.severity is not None]
+        avg_severity = int(sum(severities) / len(severities)) if severities else 0
+        evidence_strength = int(critique_count + avg_severity * 0.25)
 
         # impact severity = max simulation impact affecting this assumption
         qs = select(Simulation).where(Simulation.project_id == project_id)
@@ -79,7 +84,12 @@ async def compute_and_persist_scores(session: AsyncSession, project_id: str) -> 
             simulations=sims,
         )
 
-        risk = compute_risk_score(confidence=confidence, dep_count=dep_count, max_impact=max_impact)
+        risk = compute_risk_score(
+            confidence=confidence,
+            dep_count=dep_count,
+            max_impact=max_impact,
+            avg_critique_severity=avg_severity,
+        )
 
         score = await create_score(
             session,
@@ -88,7 +98,7 @@ async def compute_and_persist_scores(session: AsyncSession, project_id: str) -> 
             confidence_score=confidence,
             dependency_weight=dep_count,
             impact_severity=max_impact,
-            evidence_strength=critique_count,
+            evidence_strength=evidence_strength,
             risk_score=risk,
         )
         results.append(score)
