@@ -21,6 +21,7 @@ router = APIRouter(prefix="/auth")
 class RegisterIn(BaseModel):
     email: EmailStr
     password: Optional[str]
+    invite_code: Optional[str] = None
 
 
 class TokenOut(BaseModel):
@@ -30,10 +31,22 @@ class TokenOut(BaseModel):
 
 @router.post("/register", response_model=TokenOut)
 async def register(payload: RegisterIn, request: Request, session: AsyncSession = Depends(get_session)):
+    from app.core.config import get_settings
+    from app.crud import launch as launch_crud
+
+    app_settings = get_settings()
+    if app_settings.beta_enabled:
+        if not payload.invite_code:
+            raise HTTPException(status_code=403, detail="Beta invite code required")
+        await launch_crud.ensure_default_invites(session)
+        if not await launch_crud.validate_invite(session, payload.invite_code):
+            raise HTTPException(status_code=403, detail="Invalid or exhausted invite code")
     existing = await auth_crud.get_user_by_email(session, payload.email)
     if existing:
         raise HTTPException(status_code=400, detail="User already exists")
     user = await auth_crud.create_user(session, payload.email, payload.password)
+    if app_settings.beta_enabled and payload.invite_code:
+        await launch_crud.consume_invite(session, payload.invite_code)
     token = create_access_token(user.id)
     ctx = audit_context(request)
     await audit_crud.record_audit(
