@@ -1,0 +1,9 @@
+{
+  "generated_at": null,
+  "runs_total": 0,
+  "feedback_total": 0,
+  "analytics_events_total": 0,
+  "cost_usd_total": 0,
+  "tokens_total": 0,
+  "note": "Run apps/api/scripts/monthly_metrics.py to refresh."
+}
