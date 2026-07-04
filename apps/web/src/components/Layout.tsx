@@ -6,9 +6,12 @@ const Layout: React.FC<{children: React.ReactNode}> = ({children}) => {
       <header className="bg-surface border-b border-gray-800">
         <div className="h-container py-4 flex items-center justify-between">
           <div className="text-primary font-semibold">assumption sniper</div>
-          <nav>
-            <a href="/" className="text-sm text-gray-300 hover:text-white mr-4">home</a>
-            <a href="/runs" className="text-sm text-gray-300 hover:text-white">runs</a>
+          <nav className="flex gap-4 text-sm">
+            <a href="/" className="text-gray-300 hover:text-white">home</a>
+            <a href="/demo" className="text-gray-300 hover:text-white">demo</a>
+            <a href="/app" className="text-gray-300 hover:text-white">app</a>
+            <a href="/runs" className="text-gray-300 hover:text-white">runs</a>
+            <a href="/beta" className="text-gray-300 hover:text-white">beta</a>
           </nav>
         </div>
       </header>

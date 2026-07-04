@@ -22,7 +22,14 @@ export default function IdeaInput(){
   return (
     <form onSubmit={submit} className="space-y-3">
       <label className="block text-sm text-gray-300">Idea / hypothesis</label>
-      <textarea value={text} onChange={e=>setText(e.target.value)} rows={4} className="w-full bg-black/30 border border-gray-800 rounded p-3 text-sm" />
+      <textarea
+        value={text}
+        onChange={e=>setText(e.target.value)}
+        rows={4}
+        placeholder="e.g. On-demand hot food delivery to college dorms using gig drivers"
+        className="w-full bg-black/30 border border-gray-800 rounded p-3 text-sm focus:border-primary focus:outline-none"
+      />
+      <p className="text-xs text-gray-500">Tip: include who pays, how you acquire users, and what must be true for unit economics to work.</p>
       <div>
         <button className="bg-primary text-black font-semibold px-4 py-2 rounded" disabled={loading}>{loading? 'Starting...': 'Start run'}</button>
       </div>
