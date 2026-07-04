@@ -204,14 +204,14 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] approve production launch checklist
 
 ## phase 16: launch and iteration
-- [ ] publish landing page and demo flow
-- [ ] run private beta with founders and pm users
-- [ ] collect feedback and prioritize fixes
-- [ ] tune prompts and scoring based on evals
-- [ ] improve ux based on session recordings
-- [ ] expand model routing for cost and quality balance
-- [ ] track success metrics and iterate monthly
-- [ ] plan next features from roadmap
+- [x] publish landing page and demo flow
+- [x] run private beta with founders and pm users
+- [x] collect feedback and prioritize fixes
+- [x] tune prompts and scoring based on evals
+- [x] improve ux based on session recordings
+- [x] expand model routing for cost and quality balance
+- [x] track success metrics and iterate monthly
+- [x] plan next features from roadmap
 
 ## phase 17: prod ready exit criteria
 - [ ] p95 latency and error budgets meet targets
