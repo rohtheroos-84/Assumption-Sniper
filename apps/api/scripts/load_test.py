@@ -44,7 +44,7 @@ from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
-OUTPUT_PATH = Path(__file__).resolve().parents[3] / "docs" / "perf-baseline.json"
+OUTPUT_PATH = Path(__file__).resolve().parents[3] / "docs" / "observability" / "perf-baseline.json"
 ENDPOINTS = (
     ("GET", "/api/v1/ping"),
     ("GET", "/api/v1/health"),
