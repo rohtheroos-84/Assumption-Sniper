@@ -1,8 +1,16 @@
-This is the Next.js + Tailwind frontend for Assumption Sniper.
+# Web app
 
-To run locally:
-- cd apps/web
-- npm install
-- npm run dev
+Next.js frontend for Assumption Sniper.
 
-Set `NEXT_PUBLIC_API_BASE` to the backend URL (default http://localhost:8000)
+## Run locally
+
+```bash
+pnpm install
+pnpm -C apps/web dev
+```
+
+Set `NEXT_PUBLIC_API_BASE` to the backend URL (default `http://localhost:8000`).
+
+## Docs
+
+See [docs/getting-started.md](../../docs/getting-started.md) and [docs/README.md](../../docs/README.md).
