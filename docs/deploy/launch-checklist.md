@@ -22,16 +22,17 @@ Complete all items before approving the first production release. Sign off in th
 
 ## Quality gates
 
-- [ ] All API tests pass locally and in CI (105+)
+- [ ] All API tests pass locally and in CI (115+)
 - [ ] E2E workflow tests pass in CI
-- [ ] p95 latency baseline recorded (`docs/perf-baseline.json`)
+- [ ] p95 latency baseline recorded (`docs/observability/perf-baseline.json`)
+- [ ] Exit criteria report passes (`python apps/api/scripts/verify_exit_criteria.py`)
 - [ ] Security review complete (Phase 13)
 - [ ] Observability dashboards imported (`docs/observability/grafana-dashboard.json`)
 - [ ] Alert rules loaded (`docs/observability/prometheus-alerts.yml`)
 
 ## Operational readiness
 
-- [ ] Runbooks reviewed (`docs/runbooks/`)
+- [ ] Runbooks reviewed (`docs/operations/runbooks/`)
 - [ ] On-call rotation configured (`docs/on-call/rotation.json`)
 - [ ] Escalation path documented (`docs/on-call/escalation.md`)
 - [ ] Data retention purge job scheduled (`scripts/purge_retention.py`)
