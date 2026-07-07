@@ -1,0 +1,7 @@
+{
+  "tested_at": "2026-07-05T08:30:30.283465+00:00",
+  "passed": true,
+  "detail": "schema snapshot cycle verified for 18 tables (no live DB)",
+  "table_count": 18,
+  "mode": "schema-only"
+}

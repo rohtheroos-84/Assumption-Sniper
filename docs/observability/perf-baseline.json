@@ -2,6 +2,7 @@
   "generated_at": "2026-06-20T15:07:08.015118+00:00",
   "concurrency": 5,
   "requests_per_endpoint": 20,
+  "error_rate": 0.0,
   "endpoints": {
     "/api/v1/ping": {
       "count": 20,

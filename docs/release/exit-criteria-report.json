@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-07-05T08:30:31.319161+00:00",
+  "version": "v1.0.0",
+  "passed": true,
+  "criteria": [
+    {
+      "id": "latency_error_budget",
+      "name": "p95 latency and error budgets meet targets",
+      "passed": true,
+      "detail": "all 2 endpoints under 500ms p95; error_rate=0.0000"
+    },
+    {
+      "id": "eval_metrics",
+      "name": "eval metrics meet quality thresholds",
+      "passed": true,
+      "detail": "3/3 cases passed; avg_relevance=0.40; theme_coverage=0.89"
+    },
+    {
+      "id": "security_review",
+      "name": "security review passed with no critical findings",
+      "passed": true,
+      "detail": "approved with zero critical findings (see docs/security/review-report.md)"
+    },
+    {
+      "id": "backup_restore",
+      "name": "backup and restore tested end to end",
+      "passed": true,
+      "detail": "last test at 2026-07-05T08:30:30.283465+00:00"
+    },
+    {
+      "id": "incident_drills",
+      "name": "incident response drills completed",
+      "passed": true,
+      "detail": "drill log contains completed incident response exercise"
+    },
+    {
+      "id": "docs_runbooks",
+      "name": "docs and runbooks complete",
+      "passed": true,
+      "detail": "all 23 required documentation files present"
+    },
+    {
+      "id": "release_notes",
+      "name": "release notes prepared",
+      "passed": true,
+      "detail": "docs/release/v1.0.0.md ready"
+    },
+    {
+      "id": "owner_sign_off",
+      "name": "owner sign-off for v1 production release",
+      "passed": true,
+      "detail": "v1 production release approved in docs/release/sign-off.md"
+    }
+  ]
+}
