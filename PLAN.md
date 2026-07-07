@@ -214,11 +214,11 @@ all steps are checkboxes and should be marked as they are completed.
 - [x] plan next features from roadmap
 
 ## phase 17: prod ready exit criteria
-- [ ] p95 latency and error budgets meet targets
-- [ ] eval metrics meet quality thresholds
-- [ ] security review passed with no critical findings
-- [ ] backup and restore tested end to end
-- [ ] incident response drills completed
-- [ ] docs and runbooks complete
-- [ ] release notes prepared
-- [ ] owner sign-off for v1 production release
+- [x] p95 latency and error budgets meet targets
+- [x] eval metrics meet quality thresholds
+- [x] security review passed with no critical findings
+- [x] backup and restore tested end to end
+- [x] incident response drills completed
+- [x] docs and runbooks complete
+- [x] release notes prepared
+- [x] owner sign-off for v1 production release
