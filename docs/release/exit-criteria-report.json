@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-05T08:30:31.319161+00:00",
+  "generated_at": "2026-07-08T13:30:35.686495+00:00",
   "version": "v1.0.0",
   "passed": true,
   "criteria": [
@@ -37,7 +37,7 @@
       "id": "docs_runbooks",
       "name": "docs and runbooks complete",
       "passed": true,
-      "detail": "all 23 required documentation files present"
+      "detail": "all 24 required documentation files present"
     },
     {
       "id": "release_notes",

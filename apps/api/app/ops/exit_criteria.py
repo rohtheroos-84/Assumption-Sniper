@@ -24,7 +24,8 @@ P95_LATENCY_MS = 500
 MAX_ERROR_RATE = 0.005
 
 REQUIRED_DOCS = [
-    "docs/README.md",
+    "docs/index.md",
+    "docs/project-complete.md",
     "docs/getting-started.md",
     "docs/architecture.md",
     "docs/security/permissions.md",
