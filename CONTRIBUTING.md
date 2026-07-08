@@ -16,4 +16,4 @@
 
 ## reviews
 - at least one reviewer required
-- update docs when behavior changes
+- update docs when behavior changes (see `docs/index.md`)

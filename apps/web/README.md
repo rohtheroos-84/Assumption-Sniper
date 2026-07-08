@@ -9,8 +9,9 @@ pnpm install
 pnpm -C apps/web dev
 ```
 
-Set `NEXT_PUBLIC_API_BASE` to the backend URL (default `http://localhost:8000`).
+Set `NEXT_PUBLIC_API_BASE_URL` to the backend (default `http://localhost:8000`).
 
-## Docs
+## Documentation
 
-See [docs/getting-started.md](../../docs/getting-started.md) and [docs/README.md](../../docs/README.md).
+- Setup: [docs/getting-started.md](../../docs/getting-started.md)
+- Index: [docs/index.md](../../docs/index.md)
